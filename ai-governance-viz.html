@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI利活用ガバナンス | Neural Network</title>
+    <title>AI Governance Matrix | 3D Neural Network</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Noto+Sans+JP:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
             --cyan: #00f5ff;
@@ -18,8 +19,7 @@
             --purple: #cc00ff;
             --teal: #00ffcc;
             --void: #0a0a0f;
-            --deep-void: #050508;
-            --grid-color: rgba(0, 245, 255, 0.03);
+            --deep-void: #030305;
         }
 
         * {
@@ -34,18 +34,19 @@
             color: white;
             overflow: hidden;
             min-height: 100vh;
+            cursor: crosshair;
         }
 
-        .container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        #canvas3d {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
         }
 
-        /* Scan lines overlay */
+        /* Scanlines */
         .scanlines {
             position: fixed;
             top: 0;
@@ -58,37 +59,566 @@
                 0deg,
                 transparent,
                 transparent 2px,
-                rgba(0, 0, 0, 0.1) 2px,
-                rgba(0, 0, 0, 0.1) 4px
+                rgba(0, 0, 0, 0.08) 2px,
+                rgba(0, 0, 0, 0.08) 4px
             );
-            animation: scanMove 8s linear infinite;
+            mix-blend-mode: overlay;
         }
 
-        @keyframes scanMove {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 100%; }
+        /* HUD Elements */
+        .hud {
+            position: fixed;
+            z-index: 100;
+            pointer-events: none;
         }
 
-        /* Grid background */
-        .grid-bg {
+        .hud-interactive {
+            pointer-events: auto;
+        }
+
+        /* Top HUD */
+        .hud-top {
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 20px 30px;
+        }
+
+        .hud-title {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .hud-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: var(--cyan);
+            text-shadow: 0 0 20px var(--cyan), 0 0 40px var(--cyan);
+        }
+
+        .hud-title span {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: rgba(0, 245, 255, 0.6);
+            letter-spacing: 2px;
+        }
+
+        /* Stats Panel */
+        .stats-panel {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--cyan);
+            text-shadow: 0 0 15px var(--cyan);
+        }
+
+        .stat-label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        /* Level / XP Bar */
+        .level-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .level-badge {
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--cyan);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, rgba(0, 245, 255, 0.2) 0%, transparent 70%);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.3), inset 0 0 15px rgba(0, 245, 255, 0.1);
+        }
+
+        .level-badge span {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--cyan);
+            text-shadow: 0 0 10px var(--cyan);
+        }
+
+        .xp-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .xp-bar {
+            width: 150px;
+            height: 8px;
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cyan), var(--magenta));
+            box-shadow: 0 0 10px var(--cyan);
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .xp-text {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: rgba(0, 245, 255, 0.7);
+        }
+
+        /* Side Panel - Domains */
+        .hud-left {
+            top: 100px;
+            left: 20px;
+            width: 280px;
+        }
+
+        .domain-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .domain-card {
+            background: rgba(0, 10, 20, 0.8);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            border-radius: 6px;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .domain-card:hover {
+            border-color: var(--cyan);
+            background: rgba(0, 245, 255, 0.05);
+            transform: translateX(5px);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
+        }
+
+        .domain-card.active {
+            border-color: var(--magenta);
+            background: rgba(255, 0, 255, 0.1);
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
+        }
+
+        .domain-card.completed {
+            border-color: var(--neon-green);
+        }
+
+        .domain-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: 2px solid;
+            flex-shrink: 0;
+        }
+
+        .domain-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .domain-name {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .domain-progress {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .domain-progress-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .domain-score {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* Right Panel - Detail */
+        .hud-right {
+            top: 100px;
+            right: 20px;
+            width: 400px;
+            max-height: calc(100vh - 140px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-panel {
+            background: rgba(0, 10, 20, 0.9);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 8px;
+            backdrop-filter: blur(20px);
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+        }
+
+        .detail-panel.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .detail-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(0, 245, 255, 0.2);
+            flex-shrink: 0;
+        }
+
+        .detail-domain-id {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            letter-spacing: 3px;
+            margin-bottom: 6px;
+        }
+
+        .detail-domain-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-domain-name .icon {
+            font-size: 24px;
+        }
+
+        .detail-domain-desc {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.5;
+        }
+
+        .detail-content {
+            padding: 15px 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .detail-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .detail-content::-webkit-scrollbar-track {
+            background: rgba(0, 245, 255, 0.05);
+        }
+
+        .detail-content::-webkit-scrollbar-thumb {
+            background: var(--cyan);
+            border-radius: 2px;
+        }
+
+        .process-card {
+            background: rgba(0, 245, 255, 0.03);
+            border: 1px solid rgba(0, 245, 255, 0.1);
+            border-radius: 6px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .process-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--cyan);
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+
+        .process-card:hover {
+            background: rgba(0, 245, 255, 0.08);
+            border-color: rgba(0, 245, 255, 0.3);
+            transform: translateX(3px);
+        }
+
+        .process-card:hover::before {
+            opacity: 1;
+            box-shadow: 0 0 10px var(--cyan);
+        }
+
+        .process-card.checked {
+            border-color: var(--neon-green);
+        }
+
+        .process-card.checked::before {
+            background: var(--neon-green);
+        }
+
+        .process-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .process-code {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border: 1px solid;
+            border-radius: 3px;
+        }
+
+        .process-name {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .process-check {
+            margin-left: auto;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 245, 255, 0.3);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .process-card.checked .process-check {
+            background: var(--neon-green);
+            border-color: var(--neon-green);
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+
+        .process-text {
+            font-size: 11px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Bottom HUD */
+        .hud-bottom {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: rgba(0, 10, 20, 0.8);
+            border: 1px solid var(--cyan);
+            border-radius: 6px;
+            padding: 10px 20px;
+            color: var(--cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn:hover {
+            background: var(--cyan);
+            color: var(--deep-void);
+            box-shadow: 0 0 30px var(--cyan);
+        }
+
+        .control-btn.active {
+            background: var(--magenta);
+            border-color: var(--magenta);
+            color: white;
+            box-shadow: 0 0 30px var(--magenta);
+        }
+
+        /* Achievement Popup */
+        .achievement-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: linear-gradient(135deg, rgba(0, 20, 40, 0.95) 0%, rgba(10, 10, 30, 0.95) 100%);
+            border: 2px solid var(--neon-green);
+            border-radius: 12px;
+            padding: 30px 50px;
+            text-align: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 60px rgba(0, 255, 136, 0.4);
+        }
+
+        .achievement-popup.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+
+        .achievement-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            animation: achievementBounce 0.6s ease infinite;
+        }
+
+        @keyframes achievementBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .achievement-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: var(--neon-green);
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .achievement-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .achievement-desc {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .achievement-xp {
+            margin-top: 15px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            color: var(--yellow);
+            text-shadow: 0 0 15px var(--yellow);
+        }
+
+        /* Minimap */
+        .minimap {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            background: rgba(0, 10, 20, 0.8);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 8px;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .minimap-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .minimap-label {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 8px;
+            color: rgba(0, 245, 255, 0.5);
+            letter-spacing: 1px;
+        }
+
+        /* Instructions */
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: rgba(0, 245, 255, 0.4);
+        }
+
+        .instructions div {
+            margin-bottom: 4px;
+        }
+
+        .key {
+            display: inline-block;
+            padding: 2px 6px;
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 3px;
+            margin-right: 5px;
+            font-size: 9px;
+        }
+
+        /* Particle effects overlay */
+        .particles-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-image:
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: gridPulse 4s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 50;
         }
 
-        @keyframes gridPulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-
-        /* Glitch effect overlay */
+        /* Glitch effect */
         .glitch-overlay {
             position: fixed;
             top: 0;
@@ -98,713 +628,132 @@
             pointer-events: none;
             z-index: 999;
             opacity: 0;
-            animation: glitchFlash 10s ease-in-out infinite;
-        }
-
-        @keyframes glitchFlash {
-            0%, 95%, 100% { opacity: 0; }
-            96% {
-                opacity: 0.1;
-                background: linear-gradient(90deg, var(--cyan) 0%, transparent 50%, var(--magenta) 100%);
-                transform: translateX(-2px);
-            }
-            97% { opacity: 0; }
-            98% {
-                opacity: 0.15;
-                background: linear-gradient(90deg, var(--magenta) 0%, transparent 50%, var(--cyan) 100%);
-                transform: translateX(2px);
-            }
-        }
-
-        /* Main visualization container */
-        .viz-container {
-            position: relative;
-            width: 800px;
-            height: 800px;
-            transition: all 0.5s ease;
-        }
-
-        .viz-container.shifted {
-            transform: translateX(-200px);
-        }
-
-        /* SVG for connections */
-        .connections-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-
-        /* Central hub */
-        .central-hub {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-            text-align: center;
-        }
-
-        .hub-core {
-            width: 160px;
-            height: 160px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%,
-                rgba(0, 245, 255, 0.3) 0%,
-                rgba(0, 102, 255, 0.2) 50%,
-                transparent 70%
+            background: linear-gradient(90deg,
+                rgba(255,0,255,0.1) 0%,
+                transparent 50%,
+                rgba(0,255,255,0.1) 100%
             );
-            border: 2px solid var(--cyan);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            position: relative;
-            animation: hubPulse 3s ease-in-out infinite;
-            box-shadow:
-                0 0 30px rgba(0, 245, 255, 0.3),
-                0 0 60px rgba(0, 245, 255, 0.2),
-                inset 0 0 30px rgba(0, 245, 255, 0.1);
         }
 
-        @keyframes hubPulse {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow:
-                    0 0 30px rgba(0, 245, 255, 0.3),
-                    0 0 60px rgba(0, 245, 255, 0.2),
-                    inset 0 0 30px rgba(0, 245, 255, 0.1);
-            }
-            50% {
-                transform: scale(1.02);
-                box-shadow:
-                    0 0 50px rgba(0, 245, 255, 0.5),
-                    0 0 100px rgba(0, 245, 255, 0.3),
-                    inset 0 0 50px rgba(0, 245, 255, 0.2);
-            }
-        }
-
-        .hub-core::before {
-            content: '';
-            position: absolute;
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 245, 255, 0.2);
-            animation: ringExpand 4s ease-out infinite;
-        }
-
-        .hub-core::after {
-            content: '';
-            position: absolute;
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 0, 255, 0.2);
-            animation: ringExpand 4s ease-out infinite 2s;
-        }
-
-        @keyframes ringExpand {
-            0% { transform: scale(0.9); opacity: 1; }
-            100% { transform: scale(1.8); opacity: 0; }
-        }
-
-        .hub-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: var(--cyan);
-            text-shadow: 0 0 10px var(--cyan);
-            margin-bottom: 4px;
-        }
-
-        .hub-subtitle {
-            font-family: 'Noto Sans JP', sans-serif;
-            font-size: 13px;
-            font-weight: 700;
-            color: white;
-            text-shadow: 0 0 20px var(--cyan);
-        }
-
-        .hub-label {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 8px;
-            color: rgba(0, 245, 255, 0.7);
-            margin-top: 8px;
-            letter-spacing: 1px;
-        }
-
-        /* Domain nodes */
-        .domain-node {
-            position: absolute;
-            width: 110px;
-            height: 110px;
-            transform: translate(-50%, -50%);
-            z-index: 5;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .node-outer {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 245, 255, 0.3);
-            animation: nodeRotate 20s linear infinite;
-        }
-
-        .node-outer::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: 50%;
-            width: 4px;
-            height: 4px;
-            background: var(--cyan);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--cyan);
-        }
-
-        @keyframes nodeRotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .node-inner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 85px;
-            height: 85px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%,
-                rgba(0, 245, 255, 0.15) 0%,
-                rgba(0, 20, 40, 0.9) 70%
-            );
-            border: 2px solid;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            transition: all 0.3s ease;
-        }
-
-        .domain-node.active .node-inner {
-            box-shadow:
-                0 0 40px currentColor,
-                0 0 80px currentColor,
-                inset 0 0 30px rgba(255, 255, 255, 0.2);
-            transform: translate(-50%, -50%) scale(1.1);
-        }
-
-        .node-icon {
-            font-size: 22px;
-            margin-bottom: 2px;
-            filter: drop-shadow(0 0 8px currentColor);
-        }
-
-        .node-label {
-            font-family: 'Noto Sans JP', sans-serif;
-            font-size: 10px;
-            font-weight: 700;
-            text-align: center;
-            line-height: 1.2;
-            text-shadow: 0 0 10px currentColor;
-        }
-
-        .node-id {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 7px;
-            opacity: 0.7;
-            margin-top: 2px;
-        }
-
-        .domain-node:hover {
-            transform: translate(-50%, -50%) scale(1.1);
-            z-index: 20;
-        }
-
-        .domain-node:hover .node-inner {
-            box-shadow:
-                0 0 30px currentColor,
-                0 0 60px currentColor,
-                inset 0 0 20px rgba(255, 255, 255, 0.1);
-        }
-
-        /* Process ring */
-        .process-ring {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 450px;
-            height: 450px;
-            border-radius: 50%;
-            border: 1px dashed rgba(0, 245, 255, 0.2);
-            animation: processRotate 60s linear infinite reverse;
-        }
-
-        @keyframes processRotate {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        .process-label {
-            position: absolute;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 9px;
-            color: rgba(0, 245, 255, 0.5);
-            white-space: nowrap;
-        }
-
-        /* Connection paths */
-        .connection-path {
-            fill: none;
-            stroke-width: 1.5;
-            opacity: 0.4;
-            filter: drop-shadow(0 0 3px currentColor);
-            transition: all 0.3s ease;
-        }
-
-        .connection-path.active {
-            opacity: 1;
-            stroke-width: 2.5;
-            filter: drop-shadow(0 0 10px currentColor);
-        }
-
-        /* Particle canvas */
-        #particleCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
-            pointer-events: none;
-        }
-
-        /* Detail panel */
-        .detail-panel {
+        /* Tooltip */
+        .tooltip {
             position: fixed;
-            right: -500px;
-            top: 0;
-            width: 480px;
-            height: 100vh;
-            background: linear-gradient(135deg, rgba(10, 10, 20, 0.98) 0%, rgba(5, 5, 15, 0.98) 100%);
-            border-left: 1px solid var(--cyan);
-            z-index: 500;
-            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-y: auto;
-            backdrop-filter: blur(20px);
-        }
-
-        .detail-panel.open {
-            right: 0;
-        }
-
-        .detail-panel::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .detail-panel::-webkit-scrollbar-track {
-            background: rgba(0, 245, 255, 0.1);
-        }
-
-        .detail-panel::-webkit-scrollbar-thumb {
-            background: var(--cyan);
-            border-radius: 2px;
-        }
-
-        .panel-header {
-            position: sticky;
-            top: 0;
-            padding: 25px 30px;
-            background: linear-gradient(180deg, rgba(10, 10, 20, 1) 0%, rgba(10, 10, 20, 0.95) 100%);
-            border-bottom: 1px solid rgba(0, 245, 255, 0.2);
-            z-index: 10;
-        }
-
-        .panel-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 36px;
-            height: 36px;
+            background: rgba(0, 10, 20, 0.95);
             border: 1px solid var(--cyan);
-            background: transparent;
-            color: var(--cyan);
-            font-size: 20px;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .panel-close:hover {
-            background: var(--cyan);
-            color: var(--deep-void);
-            box-shadow: 0 0 20px var(--cyan);
-        }
-
-        .panel-domain-id {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            letter-spacing: 3px;
-            margin-bottom: 8px;
-        }
-
-        .panel-domain-name {
-            font-family: 'Noto Sans JP', sans-serif;
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            text-shadow: 0 0 20px currentColor;
-        }
-
-        .panel-domain-desc {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.6);
-            line-height: 1.6;
-        }
-
-        .panel-content {
-            padding: 20px 30px 40px;
-        }
-
-        .process-item {
-            margin-bottom: 20px;
-            padding: 18px;
-            background: rgba(0, 245, 255, 0.03);
-            border: 1px solid rgba(0, 245, 255, 0.15);
             border-radius: 6px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .process-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 3px;
-            height: 100%;
-            background: var(--cyan);
-            opacity: 0.5;
-        }
-
-        .process-item:hover {
-            background: rgba(0, 245, 255, 0.08);
-            border-color: rgba(0, 245, 255, 0.3);
-            transform: translateX(5px);
-        }
-
-        .process-item:hover::before {
-            opacity: 1;
-            box-shadow: 0 0 10px var(--cyan);
-        }
-
-        .process-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-
-        .process-code {
-            font-family: 'Orbitron', sans-serif;
+            padding: 10px 15px;
             font-size: 11px;
-            font-weight: 700;
-            padding: 4px 10px;
-            background: rgba(0, 245, 255, 0.15);
-            border: 1px solid var(--cyan);
-            border-radius: 3px;
-            color: var(--cyan);
-            text-shadow: 0 0 8px var(--cyan);
-        }
-
-        .process-name {
-            font-family: 'Noto Sans JP', sans-serif;
-            font-size: 13px;
-            font-weight: 700;
-            color: white;
-        }
-
-        .process-text {
-            font-size: 12px;
-            line-height: 1.8;
-            color: rgba(255, 255, 255, 0.85);
-            padding-left: 4px;
-        }
-
-        /* Header */
-        .header {
-            position: fixed;
-            top: 20px;
-            left: 30px;
-            z-index: 100;
-        }
-
-        .header h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            font-weight: 400;
-            letter-spacing: 6px;
-            color: var(--cyan);
-            text-shadow: 0 0 20px var(--cyan);
-            animation: headerGlow 3s ease-in-out infinite;
-        }
-
-        @keyframes headerGlow {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
-        }
-
-        .header-sub {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 9px;
-            color: rgba(0, 245, 255, 0.5);
-            margin-top: 4px;
-            letter-spacing: 2px;
-        }
-
-        /* Instructions */
-        .instructions {
-            position: fixed;
-            bottom: 30px;
-            left: 30px;
-            z-index: 100;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 10px;
-            color: rgba(0, 245, 255, 0.5);
-        }
-
-        .instructions span {
-            display: inline-block;
-            padding: 4px 10px;
-            border: 1px solid rgba(0, 245, 255, 0.3);
-            border-radius: 3px;
-            margin-right: 8px;
-        }
-
-        /* Floating data points */
-        .data-float {
-            position: absolute;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 9px;
-            color: rgba(0, 245, 255, 0.3);
+            max-width: 250px;
+            z-index: 3000;
+            opacity: 0;
             pointer-events: none;
-            animation: dataFloat 20s linear infinite;
+            transition: opacity 0.2s ease;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
         }
 
-        @keyframes dataFloat {
-            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.3; }
-            90% { opacity: 0.3; }
-            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
-        }
-
-        /* Process legend on left */
-        .process-legend {
-            position: fixed;
-            left: 30px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 9px;
-            color: rgba(255, 255, 255, 0.5);
-            padding: 4px 8px;
-            border-left: 2px solid var(--cyan);
-            transition: all 0.2s ease;
-        }
-
-        .legend-item:hover {
-            color: white;
-            border-left-color: var(--magenta);
-            background: rgba(0, 245, 255, 0.05);
-        }
-
-        .legend-code {
-            color: var(--cyan);
-            font-weight: bold;
+        .tooltip.visible {
+            opacity: 1;
         }
     </style>
 </head>
 <body>
+    <canvas id="canvas3d"></canvas>
     <div class="scanlines"></div>
-    <div class="glitch-overlay"></div>
-    <div class="grid-bg"></div>
+    <div class="glitch-overlay" id="glitchOverlay"></div>
+    <canvas class="particles-overlay" id="particlesOverlay"></canvas>
 
-    <div class="header">
-        <h1>NEURAL GOVERNANCE NETWORK</h1>
-        <div class="header-sub">AI UTILIZATION FRAMEWORK v2.0</div>
+    <!-- Top HUD -->
+    <div class="hud hud-top">
+        <div class="hud-title">
+            <h1>AI GOVERNANCE MATRIX</h1>
+            <span>NEURAL NETWORK VISUALIZATION v3.0</span>
+        </div>
+
+        <div class="stats-panel hud-interactive">
+            <div class="stat-item">
+                <div class="stat-value" id="checkedCount">0</div>
+                <div class="stat-label">CHECKED</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalCount">64</div>
+                <div class="stat-label">TOTAL</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="completionRate">0%</div>
+                <div class="stat-label">COMPLETION</div>
+            </div>
+        </div>
+
+        <div class="level-container hud-interactive">
+            <div class="level-badge">
+                <span id="levelNum">1</span>
+            </div>
+            <div class="xp-container">
+                <div class="xp-bar">
+                    <div class="xp-fill" id="xpFill"></div>
+                </div>
+                <div class="xp-text"><span id="currentXP">0</span> / <span id="maxXP">100</span> XP</div>
+            </div>
+        </div>
     </div>
 
-    <div class="process-legend">
-        <div class="legend-item"><span class="legend-code">R1</span> 方針・責任</div>
-        <div class="legend-item"><span class="legend-code">R2</span> リスク評価</div>
-        <div class="legend-item"><span class="legend-code">R3</span> 設計・検証</div>
-        <div class="legend-item"><span class="legend-code">R4</span> 資産・ログ</div>
-        <div class="legend-item"><span class="legend-code">R5</span> 監視・検知</div>
-        <div class="legend-item"><span class="legend-code">R6</span> 封じ込め・復旧</div>
-        <div class="legend-item"><span class="legend-code">R7</span> 対外対応</div>
-        <div class="legend-item"><span class="legend-code">R8</span> 改善・是正</div>
+    <!-- Left Panel - Domain List -->
+    <div class="hud hud-left hud-interactive">
+        <div class="domain-list" id="domainList"></div>
     </div>
 
+    <!-- Right Panel - Detail -->
+    <div class="hud hud-right hud-interactive">
+        <div class="detail-panel" id="detailPanel">
+            <div class="detail-header" id="detailHeader">
+                <div class="detail-domain-id" id="detailDomainId">DOMAIN.01</div>
+                <div class="detail-domain-name" id="detailDomainName">
+                    <span class="icon">👁</span>
+                    <span>人間監督</span>
+                </div>
+                <div class="detail-domain-desc" id="detailDomainDesc">AIの判断に対する人間の最終決定権・介入・オーバーライド機能の確保</div>
+            </div>
+            <div class="detail-content" id="detailContent"></div>
+        </div>
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="hud hud-bottom hud-interactive">
+        <button class="control-btn" id="btnRotate" onclick="toggleAutoRotate()">AUTO ROTATE</button>
+        <button class="control-btn" id="btnReset" onclick="resetCamera()">RESET VIEW</button>
+        <button class="control-btn" id="btnExport" onclick="exportProgress()">EXPORT DATA</button>
+    </div>
+
+    <!-- Minimap -->
+    <div class="minimap">
+        <canvas class="minimap-canvas" id="minimapCanvas"></canvas>
+        <div class="minimap-label">ORBITAL VIEW</div>
+    </div>
+
+    <!-- Instructions -->
     <div class="instructions">
-        <span>CLICK</span> ノードをクリックで詳細表示
+        <div><span class="key">DRAG</span> Rotate View</div>
+        <div><span class="key">SCROLL</span> Zoom</div>
+        <div><span class="key">CLICK</span> Select Node</div>
     </div>
 
-    <div class="container">
-        <div class="viz-container" id="vizContainer">
-            <canvas id="particleCanvas"></canvas>
-
-            <svg class="connections-svg" viewBox="0 0 800 800">
-                <defs>
-                    <filter id="glow">
-                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                        <feMerge>
-                            <feMergeNode in="coloredBlur"/>
-                            <feMergeNode in="SourceGraphic"/>
-                        </feMerge>
-                    </filter>
-                </defs>
-                <g id="connections" filter="url(#glow)"></g>
-            </svg>
-
-            <div class="process-ring">
-                <div class="process-label" style="top: -15px; left: 50%; transform: translateX(-50%);">R1</div>
-                <div class="process-label" style="top: 12%; right: -5%;">R2</div>
-                <div class="process-label" style="top: 50%; right: -20px; transform: translateY(-50%);">R3</div>
-                <div class="process-label" style="bottom: 12%; right: -5%;">R4</div>
-                <div class="process-label" style="bottom: -15px; left: 50%; transform: translateX(-50%);">R5</div>
-                <div class="process-label" style="bottom: 12%; left: -5%;">R6</div>
-                <div class="process-label" style="top: 50%; left: -20px; transform: translateY(-50%);">R7</div>
-                <div class="process-label" style="top: 12%; left: -5%;">R8</div>
-            </div>
-
-            <div class="central-hub">
-                <div class="hub-core">
-                    <div class="hub-title">AI GOVERNANCE</div>
-                    <div class="hub-subtitle">AI利活用</div>
-                    <div class="hub-subtitle">ガバナンス</div>
-                    <div class="hub-label">8 DOMAINS × 8 PROCESSES</div>
-                </div>
-            </div>
-
-            <!-- Domain nodes -->
-            <div class="domain-node" data-domain="0">
-                <div class="node-outer"></div>
-                <div class="node-inner" style="color: var(--cyan); border-color: var(--cyan);">
-                    <div class="node-icon">👁</div>
-                    <div class="node-label">人間監督</div>
-                    <div class="node-id">01</div>
-                </div>
-            </div>
-
-            <div class="domain-node" data-domain="1">
-                <div class="node-outer" style="animation-direction: reverse;"></div>
-                <div class="node-inner" style="color: var(--magenta); border-color: var(--magenta);">
-                    <div class="node-icon">🔐</div>
-                    <div class="node-label">プライバシー</div>
-                    <div class="node-id">02</div>
-                </div>
-            </div>
-
-            <div class="domain-node" data-domain="2">
-                <div class="node-outer"></div>
-                <div class="node-inner" style="color: var(--neon-green); border-color: var(--neon-green);">
-                    <div class="node-icon">◇</div>
-                    <div class="node-label">透明性</div>
-                    <div class="node-id">03</div>
-                </div>
-            </div>
-
-            <div class="domain-node" data-domain="3">
-                <div class="node-outer" style="animation-direction: reverse;"></div>
-                <div class="node-inner" style="color: var(--electric-blue); border-color: var(--electric-blue);">
-                    <div class="node-icon">⚖</div>
-                    <div class="node-label">公平性</div>
-                    <div class="node-id">04</div>
-                </div>
-            </div>
-
-            <div class="domain-node" data-domain="4">
-                <div class="node-outer"></div>
-                <div class="node-inner" style="color: var(--orange); border-color: var(--orange);">
-                    <div class="node-icon">🛡</div>
-                    <div class="node-label">安全性</div>
-                    <div class="node-id">05</div>
-                </div>
-            </div>
-
-            <div class="domain-node" data-domain="5">
-                <div class="node-outer" style="animation-direction: reverse;"></div>
-                <div class="node-inner" style="color: var(--yellow); border-color: var(--yellow);">
-                    <div class="node-icon">📋</div>
-                    <div class="node-label">説明責任</div>
-                    <div class="node-id">06</div>
-                </div>
-            </div>
-
-            <div class="domain-node" data-domain="6">
-                <div class="node-outer"></div>
-                <div class="node-inner" style="color: var(--purple); border-color: var(--purple);">
-                    <div class="node-icon">⚙</div>
-                    <div class="node-label">コンプラ</div>
-                    <div class="node-id">07</div>
-                </div>
-            </div>
-
-            <div class="domain-node" data-domain="7">
-                <div class="node-outer" style="animation-direction: reverse;"></div>
-                <div class="node-inner" style="color: var(--teal); border-color: var(--teal);">
-                    <div class="node-icon">♡</div>
-                    <div class="node-label">メンタル</div>
-                    <div class="node-id">08</div>
-                </div>
-            </div>
-        </div>
+    <!-- Achievement Popup -->
+    <div class="achievement-popup" id="achievementPopup">
+        <div class="achievement-icon" id="achievementIcon">🏆</div>
+        <div class="achievement-title">ACHIEVEMENT UNLOCKED</div>
+        <div class="achievement-name" id="achievementName">First Steps</div>
+        <div class="achievement-desc" id="achievementDesc">Complete your first checklist item</div>
+        <div class="achievement-xp" id="achievementXP">+50 XP</div>
     </div>
 
-    <!-- Detail Panel -->
-    <div class="detail-panel" id="detailPanel">
-        <div class="panel-header">
-            <button class="panel-close" id="panelClose">×</button>
-            <div class="panel-domain-id" id="panelDomainId">DOMAIN.01</div>
-            <div class="panel-domain-name" id="panelDomainName">人間監督</div>
-            <div class="panel-domain-desc" id="panelDomainDesc">AIの判断に対する人間の最終決定権・介入・オーバーライド機能</div>
-        </div>
-        <div class="panel-content" id="panelContent">
-            <!-- Process items will be inserted here -->
-        </div>
-    </div>
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip"></div>
 
     <script>
-        // Domain data
+        // ============ DATA ============
         const domainData = [
             {
-                id: '01',
-                name: '人間監督',
-                nameEn: 'Human Oversight',
+                id: '01', name: '人間監督', nameEn: 'Human Oversight', icon: '👁',
                 color: '#00f5ff',
                 desc: 'AIの判断に対する人間の最終決定権・介入・オーバーライド機能の確保',
                 processes: [
@@ -819,9 +768,7 @@
                 ]
             },
             {
-                id: '02',
-                name: 'プライバシー・データガバナンス',
-                nameEn: 'Privacy & Data Governance',
+                id: '02', name: 'プライバシー', nameEn: 'Privacy', icon: '🔐',
                 color: '#ff00ff',
                 desc: '個人情報保護とデータの適正な管理・利用の確保',
                 processes: [
@@ -836,9 +783,7 @@
                 ]
             },
             {
-                id: '03',
-                name: '透明性',
-                nameEn: 'Transparency',
+                id: '03', name: '透明性', nameEn: 'Transparency', icon: '◇',
                 color: '#00ff88',
                 desc: 'AI利用の開示と能力・限界の適切な説明',
                 processes: [
@@ -853,9 +798,7 @@
                 ]
             },
             {
-                id: '04',
-                name: '公平性',
-                nameEn: 'Fairness',
+                id: '04', name: '公平性', nameEn: 'Fairness', icon: '⚖',
                 color: '#0066ff',
                 desc: '差別・バイアスの防止と公平な判断の確保',
                 processes: [
@@ -870,9 +813,7 @@
                 ]
             },
             {
-                id: '05',
-                name: '安全性・セキュリティ',
-                nameEn: 'Safety & Security',
+                id: '05', name: '安全性', nameEn: 'Safety', icon: '🛡',
                 color: '#ff6600',
                 desc: 'AIシステムに対する攻撃対策と堅牢性の確保',
                 processes: [
@@ -887,9 +828,7 @@
                 ]
             },
             {
-                id: '06',
-                name: '説明責任',
-                nameEn: 'Accountability',
+                id: '06', name: '説明責任', nameEn: 'Accountability', icon: '📋',
                 color: '#ffcc00',
                 desc: '役割と責任の明確化および判断根拠の説明能力',
                 processes: [
@@ -904,9 +843,7 @@
                 ]
             },
             {
-                id: '07',
-                name: 'ガバナンス・コンプライアンス',
-                nameEn: 'Governance & Compliance',
+                id: '07', name: 'コンプライアンス', nameEn: 'Compliance', icon: '⚙',
                 color: '#cc00ff',
                 desc: '法令遵守と内部統制の確保',
                 processes: [
@@ -921,9 +858,7 @@
                 ]
             },
             {
-                id: '08',
-                name: 'メンタル持続性',
-                nameEn: 'Mental Sustainability',
+                id: '08', name: 'メンタル持続性', nameEn: 'Mental Sustainability', icon: '♡',
                 color: '#00ffcc',
                 desc: '従業員・利用者の心理的負荷への配慮と人間中心の運用',
                 processes: [
@@ -939,235 +874,881 @@
             }
         ];
 
-        const nodeColors = ['#00f5ff', '#ff00ff', '#00ff88', '#0066ff', '#ff6600', '#ffcc00', '#cc00ff', '#00ffcc'];
+        // ============ GAME STATE ============
+        let gameState = {
+            checkedItems: new Set(),
+            xp: 0,
+            level: 1,
+            achievements: [],
+            selectedDomain: 0
+        };
 
-        // Position nodes
-        const nodes = document.querySelectorAll('.domain-node');
-        const centerX = 400;
-        const centerY = 400;
-        const radius = 280;
-
-        nodes.forEach((node, i) => {
-            const angle = (i * Math.PI * 2 / 8) - Math.PI / 2;
-            const x = centerX + radius * Math.cos(angle);
-            const y = centerY + radius * Math.sin(angle);
-            node.style.left = x + 'px';
-            node.style.top = y + 'px';
-        });
-
-        // Draw connections
-        const connectionsGroup = document.getElementById('connections');
-
-        function createConnection(from, to, color) {
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            const fromAngle = (from * Math.PI * 2 / 8) - Math.PI / 2;
-            const toAngle = (to * Math.PI * 2 / 8) - Math.PI / 2;
-
-            const fromX = centerX + radius * Math.cos(fromAngle);
-            const fromY = centerY + radius * Math.sin(fromAngle);
-            const toX = centerX + radius * Math.cos(toAngle);
-            const toY = centerY + radius * Math.sin(toAngle);
-
-            const ctrlX1 = fromX + (centerX - fromX) * 0.6;
-            const ctrlY1 = fromY + (centerY - fromY) * 0.6;
-            const ctrlX2 = toX + (centerX - toX) * 0.6;
-            const ctrlY2 = toY + (centerY - toY) * 0.6;
-
-            path.setAttribute('d', `M ${fromX} ${fromY} C ${ctrlX1} ${ctrlY1}, ${ctrlX2} ${ctrlY2}, ${toX} ${toY}`);
-            path.setAttribute('stroke', color);
-            path.classList.add('connection-path');
-            path.dataset.from = from;
-            path.dataset.to = to;
-
-            connectionsGroup.appendChild(path);
+        // Load saved state
+        const savedState = localStorage.getItem('aiGovernanceState');
+        if (savedState) {
+            const parsed = JSON.parse(savedState);
+            gameState.checkedItems = new Set(parsed.checkedItems || []);
+            gameState.xp = parsed.xp || 0;
+            gameState.level = parsed.level || 1;
+            gameState.achievements = parsed.achievements || [];
         }
 
-        for (let i = 0; i < 8; i++) {
-            createConnection(i, (i + 1) % 8, nodeColors[i]);
-            createConnection(i, (i + 4) % 8, nodeColors[i]);
+        // Achievements definition
+        const achievements = [
+            { id: 'first_check', name: 'First Steps', desc: 'Complete your first checklist item', icon: '🎯', xp: 50, condition: () => gameState.checkedItems.size >= 1 },
+            { id: 'domain_complete', name: 'Domain Master', desc: 'Complete all items in one domain', icon: '🏆', xp: 200, condition: () => domainData.some((d, i) => getDomainProgress(i) === 8) },
+            { id: 'halfway', name: 'Halfway There', desc: 'Complete 50% of all items', icon: '⭐', xp: 300, condition: () => gameState.checkedItems.size >= 32 },
+            { id: 'all_complete', name: 'Governance Master', desc: 'Complete all 64 items', icon: '👑', xp: 1000, condition: () => gameState.checkedItems.size >= 64 },
+            { id: 'explorer', name: 'Explorer', desc: 'View all 8 domains', icon: '🔍', xp: 100, condition: () => true }, // Triggered manually
+            { id: 'speed_demon', name: 'Speed Demon', desc: 'Complete 10 items in one session', icon: '⚡', xp: 150, condition: () => sessionChecks >= 10 }
+        ];
+
+        let sessionChecks = 0;
+        let viewedDomains = new Set();
+
+        // ============ THREE.JS SETUP ============
+        let scene, camera, renderer, nodes = [], connections = [], centralHub;
+        let raycaster, mouse;
+        let autoRotate = true;
+        let targetRotation = { x: 0, y: 0 };
+        let currentRotation = { x: 0, y: 0 };
+
+        function initThree() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x030305, 0.015);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, 25);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({
+                canvas: document.getElementById('canvas3d'),
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Raycaster for interaction
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            // Create visualization
+            createCentralHub();
+            createNodes();
+            createConnections();
+            createParticleField();
+            createGrid();
+
+            // Events
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mousedown', onMouseDown);
+            window.addEventListener('mouseup', onMouseUp);
+            window.addEventListener('wheel', onWheel);
+            document.getElementById('canvas3d').addEventListener('click', onClick);
+
+            animate();
         }
 
-        // Particle system
-        const canvas = document.getElementById('particleCanvas');
-        const ctx = canvas.getContext('2d');
+        function createCentralHub() {
+            // Core sphere
+            const coreGeometry = new THREE.IcosahedronGeometry(2, 2);
+            const coreMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00f5ff,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.6
+            });
+            centralHub = new THREE.Mesh(coreGeometry, coreMaterial);
+            scene.add(centralHub);
 
-        function resizeCanvas() {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+            // Inner glow
+            const glowGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00f5ff,
+                transparent: true,
+                opacity: 0.3
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            centralHub.add(glow);
+
+            // Outer rings
+            for (let i = 0; i < 3; i++) {
+                const ringGeometry = new THREE.RingGeometry(2.5 + i * 0.5, 2.6 + i * 0.5, 64);
+                const ringMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x00f5ff,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.3 - i * 0.1
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.x = Math.PI / 2 + (i * 0.3);
+                ring.rotation.y = i * 0.5;
+                centralHub.add(ring);
+            }
         }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
 
-        class Particle {
-            constructor() {
-                this.reset();
+        function createNodes() {
+            const radius = 12;
+
+            domainData.forEach((domain, i) => {
+                const angle = (i * Math.PI * 2 / 8) - Math.PI / 2;
+                const x = radius * Math.cos(angle);
+                const z = radius * Math.sin(angle);
+                const y = Math.sin(i * 0.5) * 2;
+
+                // Node group
+                const nodeGroup = new THREE.Group();
+                nodeGroup.position.set(x, y, z);
+                nodeGroup.userData = { domainIndex: i, type: 'node' };
+
+                // Main sphere
+                const geometry = new THREE.IcosahedronGeometry(1.2, 1);
+                const material = new THREE.MeshBasicMaterial({
+                    color: new THREE.Color(domain.color),
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                nodeGroup.add(mesh);
+
+                // Inner core
+                const coreGeo = new THREE.SphereGeometry(0.6, 16, 16);
+                const coreMat = new THREE.MeshBasicMaterial({
+                    color: new THREE.Color(domain.color),
+                    transparent: true,
+                    opacity: 0.5
+                });
+                const core = new THREE.Mesh(coreGeo, coreMat);
+                nodeGroup.add(core);
+
+                // Orbiting rings
+                const ringGeo = new THREE.TorusGeometry(1.5, 0.02, 8, 64);
+                const ringMat = new THREE.MeshBasicMaterial({
+                    color: new THREE.Color(domain.color),
+                    transparent: true,
+                    opacity: 0.4
+                });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.rotation.x = Math.random() * Math.PI;
+                nodeGroup.add(ring);
+
+                // Point light
+                const light = new THREE.PointLight(new THREE.Color(domain.color), 0.5, 8);
+                nodeGroup.add(light);
+
+                nodes.push({
+                    group: nodeGroup,
+                    mesh: mesh,
+                    ring: ring,
+                    angle: angle,
+                    baseY: y,
+                    domain: domain
+                });
+
+                scene.add(nodeGroup);
+            });
+        }
+
+        function createConnections() {
+            const material = new THREE.LineBasicMaterial({
+                color: 0x00f5ff,
+                transparent: true,
+                opacity: 0.2
+            });
+
+            // Connect adjacent nodes
+            for (let i = 0; i < 8; i++) {
+                const next = (i + 1) % 8;
+                const points = [];
+
+                const start = nodes[i].group.position;
+                const end = nodes[next].group.position;
+
+                // Curved connection
+                for (let t = 0; t <= 20; t++) {
+                    const p = t / 20;
+                    const x = start.x + (end.x - start.x) * p;
+                    const y = start.y + (end.y - start.y) * p + Math.sin(p * Math.PI) * 2;
+                    const z = start.z + (end.z - start.z) * p;
+                    points.push(new THREE.Vector3(x, y, z));
+                }
+
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const line = new THREE.Line(geometry, material.clone());
+                connections.push(line);
+                scene.add(line);
             }
 
-            reset() {
-                const angle = Math.random() * Math.PI * 2;
-                const r = 80 + Math.random() * 220;
-                this.x = canvas.width / 2 + r * Math.cos(angle);
-                this.y = canvas.height / 2 + r * Math.sin(angle);
-                this.speed = 0.2 + Math.random() * 0.4;
-                this.size = 1 + Math.random() * 2;
-                this.color = nodeColors[Math.floor(Math.random() * nodeColors.length)];
-                this.alpha = 0.2 + Math.random() * 0.4;
-                this.life = 0;
-                this.maxLife = 150 + Math.random() * 200;
-            }
+            // Connect to center
+            nodes.forEach((node, i) => {
+                const points = [];
+                const start = node.group.position;
+                const end = new THREE.Vector3(0, 0, 0);
 
-            update() {
-                const cX = canvas.width / 2;
-                const cY = canvas.height / 2;
-                const dx = this.x - cX;
-                const dy = this.y - cY;
-                const currentAngle = Math.atan2(dy, dx);
-                const r = Math.sqrt(dx * dx + dy * dy);
+                for (let t = 0; t <= 15; t++) {
+                    const p = t / 15;
+                    const x = start.x * (1 - p);
+                    const y = start.y * (1 - p) + Math.sin(p * Math.PI) * 1.5;
+                    const z = start.z * (1 - p);
+                    points.push(new THREE.Vector3(x, y, z));
+                }
 
-                const newAngle = currentAngle + 0.004;
-                const newR = r + Math.sin(this.life * 0.03) * 0.3;
-
-                this.x = cX + newR * Math.cos(newAngle);
-                this.y = cY + newR * Math.sin(newAngle);
-
-                this.life++;
-                if (this.life > this.maxLife) this.reset();
-            }
-
-            draw() {
-                const fadeIn = Math.min(this.life / 30, 1);
-                const fadeOut = Math.max(0, 1 - (this.life - this.maxLife + 30) / 30);
-                const alpha = this.alpha * fadeIn * fadeOut;
-
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.globalAlpha = alpha;
-                ctx.fill();
-
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
-                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
-                gradient.addColorStop(0, this.color);
-                gradient.addColorStop(1, 'transparent');
-                ctx.fillStyle = gradient;
-                ctx.globalAlpha = alpha * 0.3;
-                ctx.fill();
-            }
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const lineMat = new THREE.LineBasicMaterial({
+                    color: new THREE.Color(node.domain.color),
+                    transparent: true,
+                    opacity: 0.15
+                });
+                const line = new THREE.Line(geometry, lineMat);
+                connections.push(line);
+                scene.add(line);
+            });
         }
 
-        const particles = [];
-        for (let i = 0; i < 60; i++) {
-            const p = new Particle();
-            p.life = Math.random() * p.maxLife;
-            particles.push(p);
+        function createParticleField() {
+            const particleCount = 500;
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount; i++) {
+                const i3 = i * 3;
+                const radius = 5 + Math.random() * 30;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.random() * Math.PI;
+
+                positions[i3] = radius * Math.sin(phi) * Math.cos(theta);
+                positions[i3 + 1] = radius * Math.cos(phi);
+                positions[i3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+
+                const color = new THREE.Color(domainData[Math.floor(Math.random() * 8)].color);
+                colors[i3] = color.r;
+                colors[i3 + 1] = color.g;
+                colors[i3 + 2] = color.b;
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.1,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending
+            });
+
+            const particles = new THREE.Points(geometry, material);
+            particles.userData.type = 'particles';
+            scene.add(particles);
         }
+
+        function createGrid() {
+            const gridHelper = new THREE.GridHelper(50, 50, 0x00f5ff, 0x001520);
+            gridHelper.position.y = -8;
+            gridHelper.material.opacity = 0.3;
+            gridHelper.material.transparent = true;
+            scene.add(gridHelper);
+        }
+
+        // ============ ANIMATION ============
+        let time = 0;
 
         function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.globalAlpha = 1;
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
             requestAnimationFrame(animate);
-        }
-        animate();
+            time += 0.01;
 
-        // Panel functionality
-        const detailPanel = document.getElementById('detailPanel');
-        const panelClose = document.getElementById('panelClose');
-        const panelDomainId = document.getElementById('panelDomainId');
-        const panelDomainName = document.getElementById('panelDomainName');
-        const panelDomainDesc = document.getElementById('panelDomainDesc');
-        const panelContent = document.getElementById('panelContent');
-        const vizContainer = document.getElementById('vizContainer');
+            // Auto rotate
+            if (autoRotate) {
+                targetRotation.y += 0.002;
+            }
 
-        let activeNode = null;
+            // Smooth camera rotation
+            currentRotation.x += (targetRotation.x - currentRotation.x) * 0.05;
+            currentRotation.y += (targetRotation.y - currentRotation.y) * 0.05;
 
-        function openPanel(domainIndex) {
-            const domain = domainData[domainIndex];
+            // Update camera position
+            const cameraRadius = camera.position.length();
+            camera.position.x = Math.sin(currentRotation.y) * Math.cos(currentRotation.x) * cameraRadius;
+            camera.position.y = Math.sin(currentRotation.x) * cameraRadius;
+            camera.position.z = Math.cos(currentRotation.y) * Math.cos(currentRotation.x) * cameraRadius;
+            camera.lookAt(0, 0, 0);
 
-            // Update header with domain color
-            panelDomainId.textContent = `DOMAIN.${domain.id}`;
-            panelDomainId.style.color = domain.color;
-            panelDomainName.textContent = domain.name;
-            panelDomainName.style.color = domain.color;
-            panelDomainDesc.textContent = domain.desc;
+            // Animate central hub
+            if (centralHub) {
+                centralHub.rotation.y += 0.005;
+                centralHub.rotation.x = Math.sin(time * 0.5) * 0.1;
+                centralHub.children.forEach((child, i) => {
+                    if (child.type === 'Mesh' && child.geometry.type === 'RingGeometry') {
+                        child.rotation.z += 0.01 * (i + 1);
+                    }
+                });
+            }
 
-            // Build process items
-            panelContent.innerHTML = domain.processes.map(proc => `
-                <div class="process-item" style="--accent: ${domain.color}">
-                    <div class="process-header">
-                        <span class="process-code" style="border-color: ${domain.color}; color: ${domain.color}; background: ${domain.color}15;">${proc.code}</span>
-                        <span class="process-name">${proc.name}</span>
-                    </div>
-                    <div class="process-text">${proc.text}</div>
-                </div>
-            `).join('');
+            // Animate nodes
+            nodes.forEach((node, i) => {
+                // Floating motion
+                node.group.position.y = node.baseY + Math.sin(time + i) * 0.5;
 
-            // Update panel border color
-            detailPanel.style.borderLeftColor = domain.color;
+                // Rotation
+                node.mesh.rotation.x += 0.01;
+                node.mesh.rotation.y += 0.015;
+                node.ring.rotation.z += 0.02;
 
-            // Open panel
-            detailPanel.classList.add('open');
-            vizContainer.classList.add('shifted');
+                // Pulse based on progress
+                const progress = getDomainProgress(i);
+                const scale = 1 + (progress / 8) * 0.3 + Math.sin(time * 2 + i) * 0.05;
+                node.group.scale.setScalar(scale);
 
-            // Highlight active node
-            if (activeNode) activeNode.classList.remove('active');
-            activeNode = nodes[domainIndex];
-            activeNode.classList.add('active');
-
-            // Highlight connections
-            document.querySelectorAll('.connection-path').forEach(path => {
-                const from = parseInt(path.dataset.from);
-                const to = parseInt(path.dataset.to);
-                if (from === domainIndex || to === domainIndex) {
-                    path.classList.add('active');
+                // Highlight selected
+                if (i === gameState.selectedDomain) {
+                    node.mesh.material.opacity = 0.9 + Math.sin(time * 4) * 0.1;
                 } else {
-                    path.classList.remove('active');
+                    node.mesh.material.opacity = 0.6;
+                }
+            });
+
+            // Animate connections
+            connections.forEach((line, i) => {
+                line.material.opacity = 0.1 + Math.sin(time * 2 + i * 0.5) * 0.05;
+            });
+
+            // Animate particles
+            scene.children.forEach(child => {
+                if (child.userData.type === 'particles') {
+                    child.rotation.y += 0.0005;
+                }
+            });
+
+            renderer.render(scene, camera);
+            updateMinimap();
+        }
+
+        // ============ INTERACTION ============
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            if (isDragging) {
+                const deltaX = event.clientX - previousMousePosition.x;
+                const deltaY = event.clientY - previousMousePosition.y;
+
+                targetRotation.y += deltaX * 0.005;
+                targetRotation.x += deltaY * 0.005;
+                targetRotation.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, targetRotation.x));
+            }
+
+            previousMousePosition = { x: event.clientX, y: event.clientY };
+
+            // Tooltip
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(nodes.map(n => n.group), true);
+
+            if (intersects.length > 0) {
+                let obj = intersects[0].object;
+                while (obj.parent && !obj.userData.domainIndex && obj.userData.domainIndex !== 0) {
+                    obj = obj.parent;
+                }
+                if (obj.userData.domainIndex !== undefined) {
+                    const domain = domainData[obj.userData.domainIndex];
+                    showTooltip(event.clientX, event.clientY, `${domain.icon} ${domain.name}`);
+                }
+            } else {
+                hideTooltip();
+            }
+        }
+
+        function onMouseDown(event) {
+            if (event.target.tagName === 'CANVAS') {
+                isDragging = true;
+                autoRotate = false;
+                document.getElementById('btnRotate').classList.remove('active');
+            }
+        }
+
+        function onMouseUp() {
+            isDragging = false;
+        }
+
+        function onWheel(event) {
+            const zoomSpeed = 0.002;
+            const newZ = camera.position.length() + event.deltaY * zoomSpeed * camera.position.length();
+            const clampedZ = Math.max(10, Math.min(50, newZ));
+            camera.position.normalize().multiplyScalar(clampedZ);
+        }
+
+        function onClick(event) {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(nodes.map(n => n.group), true);
+
+            if (intersects.length > 0) {
+                let obj = intersects[0].object;
+                while (obj.parent && !obj.userData.domainIndex && obj.userData.domainIndex !== 0) {
+                    obj = obj.parent;
+                }
+                if (obj.userData.domainIndex !== undefined) {
+                    selectDomain(obj.userData.domainIndex);
+                    triggerGlitch();
+                }
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // ============ UI FUNCTIONS ============
+        function initUI() {
+            renderDomainList();
+            updateStats();
+            updateXP();
+        }
+
+        function renderDomainList() {
+            const container = document.getElementById('domainList');
+            container.innerHTML = domainData.map((domain, i) => {
+                const progress = getDomainProgress(i);
+                const isComplete = progress === 8;
+                return `
+                    <div class="domain-card ${i === gameState.selectedDomain ? 'active' : ''} ${isComplete ? 'completed' : ''}"
+                         onclick="selectDomain(${i})" data-domain="${i}">
+                        <div class="domain-icon" style="border-color: ${domain.color}; color: ${domain.color};">
+                            ${domain.icon}
+                        </div>
+                        <div class="domain-info">
+                            <div class="domain-name" style="color: ${domain.color};">${domain.name}</div>
+                            <div class="domain-progress">
+                                <div class="domain-progress-fill" style="width: ${progress / 8 * 100}%; background: ${domain.color};"></div>
+                            </div>
+                        </div>
+                        <div class="domain-score" style="color: ${domain.color};">${progress}/8</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectDomain(index) {
+            gameState.selectedDomain = index;
+            viewedDomains.add(index);
+
+            // Update domain list
+            document.querySelectorAll('.domain-card').forEach((card, i) => {
+                card.classList.toggle('active', i === index);
+            });
+
+            // Update detail panel
+            const domain = domainData[index];
+            const panel = document.getElementById('detailPanel');
+            const header = document.getElementById('detailHeader');
+
+            document.getElementById('detailDomainId').textContent = `DOMAIN.${domain.id}`;
+            document.getElementById('detailDomainId').style.color = domain.color;
+            document.getElementById('detailDomainName').innerHTML = `<span class="icon">${domain.icon}</span><span style="color: ${domain.color};">${domain.name}</span>`;
+            document.getElementById('detailDomainDesc').textContent = domain.desc;
+            header.style.borderBottomColor = domain.color;
+
+            // Render processes
+            document.getElementById('detailContent').innerHTML = domain.processes.map((proc, pi) => {
+                const itemId = `${index}-${pi}`;
+                const isChecked = gameState.checkedItems.has(itemId);
+                return `
+                    <div class="process-card ${isChecked ? 'checked' : ''}" onclick="toggleCheck(${index}, ${pi})" data-item="${itemId}">
+                        <div class="process-header">
+                            <span class="process-code" style="color: ${domain.color}; border-color: ${domain.color};">${proc.code}</span>
+                            <span class="process-name">${proc.name}</span>
+                            <div class="process-check">${isChecked ? '✓' : ''}</div>
+                        </div>
+                        <div class="process-text">${proc.text}</div>
+                    </div>
+                `;
+            }).join('');
+
+            panel.classList.add('visible');
+
+            // Check explorer achievement
+            if (viewedDomains.size === 8) {
+                checkAchievement('explorer');
+            }
+
+            // Focus camera on selected node
+            focusOnNode(index);
+        }
+
+        function focusOnNode(index) {
+            const node = nodes[index];
+            const angle = node.angle;
+            targetRotation.y = -angle + Math.PI / 2;
+        }
+
+        function toggleCheck(domainIndex, processIndex) {
+            const itemId = `${domainIndex}-${processIndex}`;
+            const wasChecked = gameState.checkedItems.has(itemId);
+
+            if (wasChecked) {
+                gameState.checkedItems.delete(itemId);
+                addXP(-10);
+            } else {
+                gameState.checkedItems.add(itemId);
+                addXP(15);
+                sessionChecks++;
+                createCheckParticles(domainIndex);
+            }
+
+            // Update UI
+            const card = document.querySelector(`[data-item="${itemId}"]`);
+            if (card) {
+                card.classList.toggle('checked', !wasChecked);
+                card.querySelector('.process-check').textContent = wasChecked ? '' : '✓';
+            }
+
+            updateStats();
+            renderDomainList();
+            saveState();
+
+            // Check achievements
+            checkAllAchievements();
+        }
+
+        function getDomainProgress(domainIndex) {
+            let count = 0;
+            for (let i = 0; i < 8; i++) {
+                if (gameState.checkedItems.has(`${domainIndex}-${i}`)) count++;
+            }
+            return count;
+        }
+
+        function updateStats() {
+            const checked = gameState.checkedItems.size;
+            document.getElementById('checkedCount').textContent = checked;
+            document.getElementById('completionRate').textContent = Math.round(checked / 64 * 100) + '%';
+        }
+
+        function addXP(amount) {
+            gameState.xp += amount;
+
+            // Level up check
+            const xpForLevel = gameState.level * 100;
+            while (gameState.xp >= xpForLevel) {
+                gameState.xp -= xpForLevel;
+                gameState.level++;
+                showLevelUp();
+            }
+
+            if (gameState.xp < 0) gameState.xp = 0;
+
+            updateXP();
+            saveState();
+        }
+
+        function updateXP() {
+            const xpForLevel = gameState.level * 100;
+            document.getElementById('levelNum').textContent = gameState.level;
+            document.getElementById('currentXP').textContent = gameState.xp;
+            document.getElementById('maxXP').textContent = xpForLevel;
+            document.getElementById('xpFill').style.width = (gameState.xp / xpForLevel * 100) + '%';
+        }
+
+        function showLevelUp() {
+            showAchievementPopup({
+                icon: '⬆️',
+                name: `Level ${gameState.level}`,
+                desc: 'You leveled up!',
+                xp: 0
+            });
+        }
+
+        function checkAllAchievements() {
+            achievements.forEach(achievement => {
+                if (!gameState.achievements.includes(achievement.id) && achievement.condition()) {
+                    checkAchievement(achievement.id);
                 }
             });
         }
 
-        function closePanel() {
-            detailPanel.classList.remove('open');
-            vizContainer.classList.remove('shifted');
-            if (activeNode) {
-                activeNode.classList.remove('active');
-                activeNode = null;
+        function checkAchievement(achievementId) {
+            if (gameState.achievements.includes(achievementId)) return;
+
+            const achievement = achievements.find(a => a.id === achievementId);
+            if (achievement) {
+                gameState.achievements.push(achievementId);
+                addXP(achievement.xp);
+                showAchievementPopup(achievement);
+                saveState();
             }
-            document.querySelectorAll('.connection-path').forEach(path => {
-                path.classList.remove('active');
+        }
+
+        function showAchievementPopup(achievement) {
+            const popup = document.getElementById('achievementPopup');
+            document.getElementById('achievementIcon').textContent = achievement.icon;
+            document.getElementById('achievementName').textContent = achievement.name;
+            document.getElementById('achievementDesc').textContent = achievement.desc;
+            document.getElementById('achievementXP').textContent = achievement.xp > 0 ? `+${achievement.xp} XP` : '';
+
+            popup.classList.add('show');
+
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 3000);
+        }
+
+        function createCheckParticles(domainIndex) {
+            // Visual feedback for checking item
+            const node = nodes[domainIndex];
+            const color = new THREE.Color(node.domain.color);
+
+            // Create burst particles
+            const particleCount = 20;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount; i++) {
+                positions[i * 3] = node.group.position.x;
+                positions[i * 3 + 1] = node.group.position.y;
+                positions[i * 3 + 2] = node.group.position.z;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const material = new THREE.PointsMaterial({
+                color: color,
+                size: 0.3,
+                transparent: true,
+                opacity: 1,
+                blending: THREE.AdditiveBlending
+            });
+
+            const particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            // Animate particles
+            const velocities = [];
+            for (let i = 0; i < particleCount; i++) {
+                velocities.push({
+                    x: (Math.random() - 0.5) * 0.3,
+                    y: Math.random() * 0.2,
+                    z: (Math.random() - 0.5) * 0.3
+                });
+            }
+
+            let frame = 0;
+            const animateParticles = () => {
+                frame++;
+                const positions = particles.geometry.attributes.position.array;
+
+                for (let i = 0; i < particleCount; i++) {
+                    positions[i * 3] += velocities[i].x;
+                    positions[i * 3 + 1] += velocities[i].y;
+                    positions[i * 3 + 2] += velocities[i].z;
+                    velocities[i].y -= 0.005; // gravity
+                }
+
+                particles.geometry.attributes.position.needsUpdate = true;
+                particles.material.opacity = 1 - frame / 60;
+
+                if (frame < 60) {
+                    requestAnimationFrame(animateParticles);
+                } else {
+                    scene.remove(particles);
+                }
+            };
+
+            animateParticles();
+        }
+
+        // ============ MINIMAP ============
+        function updateMinimap() {
+            const canvas = document.getElementById('minimapCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 150;
+            canvas.height = 150;
+
+            ctx.fillStyle = 'rgba(0, 10, 20, 0.5)';
+            ctx.fillRect(0, 0, 150, 150);
+
+            const centerX = 75;
+            const centerY = 75;
+            const scale = 3;
+
+            // Draw connections
+            ctx.strokeStyle = 'rgba(0, 245, 255, 0.2)';
+            ctx.lineWidth = 1;
+            nodes.forEach((node, i) => {
+                const next = nodes[(i + 1) % 8];
+                ctx.beginPath();
+                ctx.moveTo(centerX + node.group.position.x * scale, centerY + node.group.position.z * scale);
+                ctx.lineTo(centerX + next.group.position.x * scale, centerY + next.group.position.z * scale);
+                ctx.stroke();
+            });
+
+            // Draw nodes
+            nodes.forEach((node, i) => {
+                const x = centerX + node.group.position.x * scale;
+                const y = centerY + node.group.position.z * scale;
+                const progress = getDomainProgress(i) / 8;
+
+                ctx.beginPath();
+                ctx.arc(x, y, 4 + progress * 3, 0, Math.PI * 2);
+                ctx.fillStyle = node.domain.color;
+                ctx.globalAlpha = 0.3 + progress * 0.7;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                if (i === gameState.selectedDomain) {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            });
+
+            // Draw center
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#00f5ff';
+            ctx.globalAlpha = 0.5;
+            ctx.fill();
+
+            // Draw camera direction
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            const camX = centerX + Math.sin(currentRotation.y) * 20;
+            const camY = centerY + Math.cos(currentRotation.y) * 20;
+            ctx.lineTo(camX, camY);
+            ctx.strokeStyle = '#ff00ff';
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.8;
+            ctx.stroke();
+        }
+
+        // ============ UTILITIES ============
+        function triggerGlitch() {
+            const glitch = document.getElementById('glitchOverlay');
+            glitch.style.opacity = '0.3';
+            setTimeout(() => glitch.style.opacity = '0', 100);
+        }
+
+        function showTooltip(x, y, text) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.textContent = text;
+            tooltip.style.left = (x + 15) + 'px';
+            tooltip.style.top = (y + 15) + 'px';
+            tooltip.classList.add('visible');
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('visible');
+        }
+
+        function toggleAutoRotate() {
+            autoRotate = !autoRotate;
+            document.getElementById('btnRotate').classList.toggle('active', autoRotate);
+        }
+
+        function resetCamera() {
+            targetRotation = { x: 0.3, y: 0 };
+            camera.position.set(0, 5, 25);
+            triggerGlitch();
+        }
+
+        function exportProgress() {
+            const data = {
+                checkedItems: Array.from(gameState.checkedItems),
+                xp: gameState.xp,
+                level: gameState.level,
+                achievements: gameState.achievements,
+                exportDate: new Date().toISOString(),
+                completionRate: Math.round(gameState.checkedItems.size / 64 * 100) + '%'
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ai-governance-progress-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showAchievementPopup({
+                icon: '📁',
+                name: 'Data Exported',
+                desc: 'Your progress has been saved',
+                xp: 0
             });
         }
 
-        nodes.forEach((node, i) => {
-            node.addEventListener('click', () => openPanel(i));
-        });
-
-        panelClose.addEventListener('click', closePanel);
-
-        // Close on escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closePanel();
-        });
-
-        // Floating data
-        function createDataFloat() {
-            const container = document.querySelector('.container');
-            const data = document.createElement('div');
-            data.className = 'data-float';
-            data.textContent = `0x${Math.random().toString(16).substr(2, 8).toUpperCase()}`;
-            data.style.left = Math.random() * 100 + '%';
-            data.style.top = '100%';
-            data.style.animationDelay = Math.random() * 5 + 's';
-            container.appendChild(data);
-            setTimeout(() => data.remove(), 20000);
+        function saveState() {
+            localStorage.setItem('aiGovernanceState', JSON.stringify({
+                checkedItems: Array.from(gameState.checkedItems),
+                xp: gameState.xp,
+                level: gameState.level,
+                achievements: gameState.achievements
+            }));
         }
 
-        setInterval(createDataFloat, 3000);
-        for (let i = 0; i < 3; i++) setTimeout(createDataFloat, i * 500);
+        // ============ PARTICLES OVERLAY ============
+        function initParticlesOverlay() {
+            const canvas = document.getElementById('particlesOverlay');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    size: Math.random() * 2 + 1,
+                    color: domainData[Math.floor(Math.random() * 8)].color
+                });
+            }
+
+            function animateOverlay() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = 0.3;
+                    ctx.fill();
+                });
+
+                requestAnimationFrame(animateOverlay);
+            }
+
+            animateOverlay();
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+
+        // ============ INIT ============
+        document.addEventListener('DOMContentLoaded', () => {
+            initThree();
+            initUI();
+            initParticlesOverlay();
+            selectDomain(0);
+        });
     </script>
 </body>
 </html>

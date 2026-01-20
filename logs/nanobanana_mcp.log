@@ -1,0 +1,30 @@
+2026-01-20 12:28:48,758 - src.server - INFO - server.py:405 - Configuration: host=localhost, port=8000, dev=True
+2026-01-20 12:28:48,759 - src.server - INFO - server.py:498 - Starting nanobanana-mcp in MCP mode...
+2026-01-20 12:28:48,759 - src.server - INFO - server.py:508 - 🔍 DEBUG: GEMINI_API_KEY not found in os.environ
+2026-01-20 12:28:48,759 - src.server - INFO - server.py:508 - 🔍 DEBUG: GOOGLE_API_KEY not found in os.environ
+2026-01-20 12:28:48,759 - src.server - INFO - server.py:508 - 🔍 DEBUG: GOOGLE_AI_API_KEY not found in os.environ
+2026-01-20 12:28:48,761 - src.config_keyloader - INFO - config_keyloader.py:265 - Key loader initialized - Found key: True
+2026-01-20 12:28:48,761 - src.config_keyloader - INFO - config_keyloader.py:267 - Key source: API_Key_File (GEMINI_API_KEY)
+2026-01-20 12:28:48,761 - src.server - INFO - server.py:526 - 🔐 API key loaded from: API_Key_File
+2026-01-20 12:28:48,761 - src.server - INFO - server.py:527 - 🔐 Key name: GEMINI_API_KEY
+2026-01-20 12:28:48,761 - src.server - INFO - server.py:531 - 🔐 ✅ Clean - No OS env pollution
+2026-01-20 12:28:48,782 - src.server - INFO - server.py:39 - Starting nanobanana-mcp MCP Server...
+2026-01-20 12:28:48,782 - src.gemini_client - INFO - gemini_client.py:594 - Creating new Gemini client...
+2026-01-20 12:28:48,783 - src.config_keyloader - INFO - config_keyloader.py:265 - Key loader initialized - Found key: True
+2026-01-20 12:28:48,783 - src.config_keyloader - INFO - config_keyloader.py:267 - Key source: API_Key_File (GEMINI_API_KEY)
+2026-01-20 12:28:48,857 - src.gemini_client - INFO - gemini_client.py:143 - ✅ Gemini API client created with explicit key
+2026-01-20 12:28:48,857 - src.gemini_client - INFO - gemini_client.py:115 - 🔐 API Key Source: API_Key_File
+2026-01-20 12:28:48,857 - src.gemini_client - INFO - gemini_client.py:116 - 🔐 Key Name: GEMINI_API_KEY
+2026-01-20 12:28:48,857 - src.gemini_client - INFO - gemini_client.py:117 - 🔐 ✅ Clean - No OS env pollution
+2026-01-20 12:28:48,857 - src.gemini_client - INFO - gemini_client.py:206 - 🚀 Gemini client initialized with secure key loading
+2026-01-20 12:28:49,131 - src.gemini_client - INFO - gemini_client.py:602 - ✅ Gemini API health check passed
+2026-01-20 12:28:49,131 - src.server - INFO - server.py:43 - Gemini client initialized successfully
+2026-01-20 12:28:49,131 - src.server - INFO - server.py:47 - Output directory ready: outputs
+2026-01-20 12:28:49,131 - src.server - INFO - server.py:49 - Server startup completed successfully
+2026-01-20 12:28:49,175 - docket.worker - INFO - worker.py:1097 - Starting worker 'MacBook-Pro-2.local#20360' with the following tasks:
+2026-01-20 12:28:49,175 - docket.worker - INFO - worker.py:1099 - * trace(message: str, ...)
+2026-01-20 12:28:49,175 - docket.worker - INFO - worker.py:1099 - * fail(message: str, ...)
+2026-01-20 12:28:49,175 - docket.worker - INFO - worker.py:1099 - * sleep(seconds: float, ...)
+2026-01-20 12:28:49,188 - mcp.server.lowlevel.server - INFO - server.py:713 - Processing request of type ListToolsRequest
+2026-01-20 12:28:49,190 - mcp.server.lowlevel.server - INFO - server.py:713 - Processing request of type ListPromptsRequest
+2026-01-20 12:28:49,190 - mcp.server.lowlevel.server - INFO - server.py:713 - Processing request of type ListResourcesRequest
