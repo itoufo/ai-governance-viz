@@ -1077,6 +1077,432 @@
             0%, 100% { transform: translateY(0) rotate(0deg); }
             50% { transform: translateY(-10px) rotate(5deg); }
         }
+
+        /* ============ MOBILE FIRST RESPONSIVE ============ */
+
+        /* Mobile Navigation Tabs */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(0, 10, 20, 0.95);
+            border-top: 1px solid rgba(0, 245, 255, 0.3);
+            z-index: 200;
+            backdrop-filter: blur(20px);
+        }
+
+        .mobile-nav-tabs {
+            display: flex;
+            height: 100%;
+        }
+
+        .mobile-nav-tab {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            background: transparent;
+        }
+
+        .mobile-nav-tab .tab-icon {
+            font-size: 20px;
+        }
+
+        .mobile-nav-tab.active {
+            color: var(--cyan);
+            background: rgba(0, 245, 255, 0.1);
+        }
+
+        .mobile-nav-tab:active {
+            transform: scale(0.95);
+        }
+
+        /* Mobile view states */
+        .mobile-view {
+            display: none;
+        }
+
+        /* Base Mobile Styles (< 768px) */
+        @media (max-width: 767px) {
+            body {
+                cursor: default;
+            }
+
+            /* Show mobile nav */
+            .mobile-nav {
+                display: block;
+            }
+
+            /* Top HUD adjustments */
+            .hud-top {
+                height: auto;
+                padding: 12px 15px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .hud-title h1 {
+                font-size: 14px;
+                letter-spacing: 2px;
+            }
+
+            .hud-title span {
+                font-size: 8px;
+            }
+
+            .stats-panel {
+                gap: 15px;
+                order: 3;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .stat-value {
+                font-size: 18px;
+            }
+
+            .stat-label {
+                font-size: 8px;
+            }
+
+            .level-container {
+                gap: 10px;
+            }
+
+            .level-badge {
+                width: 40px;
+                height: 40px;
+            }
+
+            .level-badge span {
+                font-size: 14px;
+            }
+
+            .xp-bar {
+                width: 100px;
+            }
+
+            /* Hide side panels by default on mobile */
+            .hud-left,
+            .hud-right {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 60px;
+                width: 100% !important;
+                max-height: none;
+                padding: 80px 15px 15px;
+                background: rgba(0, 5, 10, 0.98);
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                overflow-y: auto;
+                z-index: 150;
+            }
+
+            .hud-right {
+                transform: translateX(100%);
+            }
+
+            .hud-left.mobile-active,
+            .hud-right.mobile-active {
+                transform: translateX(0);
+            }
+
+            /* Domain list mobile */
+            .domain-list {
+                gap: 10px;
+            }
+
+            .domain-card {
+                padding: 15px;
+                min-height: 60px;
+            }
+
+            .domain-icon {
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+
+            .domain-name {
+                font-size: 14px;
+            }
+
+            /* Detail panel mobile */
+            .detail-panel {
+                opacity: 1;
+                transform: none;
+                border: none;
+                background: transparent;
+            }
+
+            .detail-header {
+                padding: 15px;
+            }
+
+            .detail-domain-name {
+                font-size: 18px;
+            }
+
+            .detail-content {
+                padding: 10px 15px;
+            }
+
+            .process-card {
+                padding: 15px;
+                min-height: 70px;
+            }
+
+            .process-header {
+                flex-wrap: wrap;
+            }
+
+            .process-check {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+            }
+
+            .process-text {
+                font-size: 12px;
+                line-height: 1.8;
+            }
+
+            /* Hide minimap on mobile */
+            .minimap {
+                display: none;
+            }
+
+            /* Hide desktop instructions */
+            .instructions {
+                display: none;
+            }
+
+            /* Bottom HUD */
+            .hud-bottom {
+                bottom: 70px;
+                gap: 10px;
+            }
+
+            .control-btn {
+                padding: 12px 15px;
+                font-size: 10px;
+            }
+
+            /* Quiz modal mobile */
+            .quiz-modal {
+                width: 95%;
+                max-height: 85vh;
+                border-radius: 12px;
+            }
+
+            .quiz-header {
+                padding: 15px 20px;
+            }
+
+            .quiz-process-name {
+                font-size: 16px;
+            }
+
+            .quiz-body {
+                padding: 15px 20px;
+            }
+
+            .quiz-question {
+                font-size: 14px;
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .quiz-option {
+                padding: 15px;
+                min-height: 54px;
+            }
+
+            .quiz-option-marker {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+
+            .quiz-option-text {
+                font-size: 13px;
+            }
+
+            .quiz-footer {
+                padding: 15px 20px;
+            }
+
+            .quiz-stats {
+                gap: 15px;
+            }
+
+            .quiz-btn {
+                padding: 14px 24px;
+                font-size: 12px;
+                min-height: 48px;
+            }
+
+            /* Achievement popup mobile */
+            .achievement-popup {
+                width: 90%;
+                padding: 25px 20px;
+            }
+
+            .achievement-icon {
+                font-size: 50px;
+            }
+
+            .achievement-name {
+                font-size: 20px;
+            }
+
+            /* Combo display mobile */
+            .combo-display {
+                font-size: 40px;
+            }
+
+            /* Quiz result mobile */
+            .quiz-result {
+                width: 90%;
+                padding: 25px;
+            }
+        }
+
+        /* Tablet Styles (768px - 1023px) */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .hud-left {
+                width: 220px;
+            }
+
+            .hud-right {
+                width: 320px;
+            }
+
+            .domain-card {
+                padding: 10px 12px;
+            }
+
+            .domain-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+
+            .minimap {
+                width: 120px;
+                height: 120px;
+                bottom: 70px;
+            }
+
+            .instructions {
+                display: none;
+            }
+        }
+
+        /* Desktop Styles (1024px+) */
+        @media (min-width: 1024px) {
+            .mobile-nav {
+                display: none !important;
+            }
+
+            .hud-left,
+            .hud-right {
+                transform: none !important;
+            }
+        }
+
+        /* Large Desktop (1440px+) */
+        @media (min-width: 1440px) {
+            .hud-left {
+                width: 320px;
+            }
+
+            .hud-right {
+                width: 450px;
+            }
+
+            .domain-card {
+                padding: 15px 18px;
+            }
+
+            .domain-icon {
+                width: 42px;
+                height: 42px;
+                font-size: 20px;
+            }
+
+            .domain-name {
+                font-size: 14px;
+            }
+        }
+
+        /* Touch device optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .domain-card:hover,
+            .process-card:hover,
+            .quiz-option:hover {
+                transform: none;
+            }
+
+            .control-btn:hover {
+                background: rgba(0, 10, 20, 0.8);
+                color: var(--cyan);
+                box-shadow: none;
+            }
+
+            .control-btn:active {
+                background: var(--cyan);
+                color: var(--deep-void);
+            }
+        }
+
+        /* Landscape mobile */
+        @media (max-width: 767px) and (orientation: landscape) {
+            .hud-top {
+                padding: 8px 15px;
+            }
+
+            .stats-panel {
+                order: 0;
+                width: auto;
+            }
+
+            .quiz-modal {
+                max-height: 95vh;
+            }
+
+            .quiz-body {
+                max-height: 50vh;
+                overflow-y: auto;
+            }
+        }
+
+        /* Reduce motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            .scanlines {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1160,6 +1586,24 @@
         <div><span class="key">CLICK</span> Select Node</div>
         <div><span class="key">⚔</span> Answer Quiz to Conquer</div>
     </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav">
+        <div class="mobile-nav-tabs">
+            <button class="mobile-nav-tab active" data-view="3d" onclick="switchMobileView('3d')">
+                <span class="tab-icon">🌐</span>
+                <span>3D VIEW</span>
+            </button>
+            <button class="mobile-nav-tab" data-view="domains" onclick="switchMobileView('domains')">
+                <span class="tab-icon">📊</span>
+                <span>DOMAINS</span>
+            </button>
+            <button class="mobile-nav-tab" data-view="detail" onclick="switchMobileView('detail')">
+                <span class="tab-icon">📋</span>
+                <span>DETAIL</span>
+            </button>
+        </div>
+    </nav>
 
     <!-- Achievement Popup -->
     <div class="achievement-popup" id="achievementPopup">
@@ -1387,6 +1831,53 @@
 
         let sessionChecks = 0;
         let viewedDomains = new Set();
+
+        // ============ MOBILE NAVIGATION ============
+        let currentMobileView = '3d';
+
+        function switchMobileView(view) {
+            currentMobileView = view;
+            const hudLeft = document.querySelector('.hud-left');
+            const hudRight = document.querySelector('.hud-right');
+            const tabs = document.querySelectorAll('.mobile-nav-tab');
+
+            // Update tab states
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.view === view);
+            });
+
+            // Toggle panel visibility
+            hudLeft.classList.toggle('mobile-active', view === 'domains');
+            hudRight.classList.toggle('mobile-active', view === 'detail');
+
+            // Haptic feedback on mobile if available
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        // Handle back button on mobile
+        window.addEventListener('popstate', () => {
+            if (currentMobileView !== '3d') {
+                switchMobileView('3d');
+            }
+        });
+
+        // Close panels when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth >= 768) return;
+
+            const hudLeft = document.querySelector('.hud-left');
+            const hudRight = document.querySelector('.hud-right');
+            const mobileNav = document.querySelector('.mobile-nav');
+
+            if (currentMobileView !== '3d' &&
+                !hudLeft.contains(e.target) &&
+                !hudRight.contains(e.target) &&
+                !mobileNav.contains(e.target)) {
+                switchMobileView('3d');
+            }
+        });
 
         // ============ QUIZ SYSTEM ============
         let quizState = {
@@ -2717,6 +3208,11 @@
             }).join('');
 
             panel.classList.add('visible');
+
+            // On mobile, auto-switch to detail view when selecting a domain
+            if (window.innerWidth < 768) {
+                switchMobileView('detail');
+            }
 
             // Check explorer achievement
             if (viewedDomains.size === 8) {
