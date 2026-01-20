@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI利活用ガバナンス | Neural Network</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cyan: #00f5ff;
+            --magenta: #ff00ff;
+            --electric-blue: #0066ff;
+            --neon-green: #00ff88;
+            --orange: #ff6600;
+            --yellow: #ffcc00;
+            --purple: #cc00ff;
+            --teal: #00ffcc;
+            --void: #0a0a0f;
+            --deep-void: #050508;
+            --grid-color: rgba(0, 245, 255, 0.03);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--deep-void);
+            color: white;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Scan lines overlay */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.1) 2px,
+                rgba(0, 0, 0, 0.1) 4px
+            );
+            animation: scanMove 8s linear infinite;
+        }
+
+        @keyframes scanMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100%; }
+        }
+
+        /* Grid background */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Glitch effect overlay */
+        .glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0;
+            animation: glitchFlash 10s ease-in-out infinite;
+        }
+
+        @keyframes glitchFlash {
+            0%, 95%, 100% { opacity: 0; }
+            96% {
+                opacity: 0.1;
+                background: linear-gradient(90deg, var(--cyan) 0%, transparent 50%, var(--magenta) 100%);
+                transform: translateX(-2px);
+            }
+            97% { opacity: 0; }
+            98% {
+                opacity: 0.15;
+                background: linear-gradient(90deg, var(--magenta) 0%, transparent 50%, var(--cyan) 100%);
+                transform: translateX(2px);
+            }
+        }
+
+        /* Main visualization container */
+        .viz-container {
+            position: relative;
+            width: 800px;
+            height: 800px;
+            transition: all 0.5s ease;
+        }
+
+        .viz-container.shifted {
+            transform: translateX(-200px);
+        }
+
+        /* SVG for connections */
+        .connections-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Central hub */
+        .central-hub {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            text-align: center;
+        }
+
+        .hub-core {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%,
+                rgba(0, 245, 255, 0.3) 0%,
+                rgba(0, 102, 255, 0.2) 50%,
+                transparent 70%
+            );
+            border: 2px solid var(--cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            position: relative;
+            animation: hubPulse 3s ease-in-out infinite;
+            box-shadow:
+                0 0 30px rgba(0, 245, 255, 0.3),
+                0 0 60px rgba(0, 245, 255, 0.2),
+                inset 0 0 30px rgba(0, 245, 255, 0.1);
+        }
+
+        @keyframes hubPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow:
+                    0 0 30px rgba(0, 245, 255, 0.3),
+                    0 0 60px rgba(0, 245, 255, 0.2),
+                    inset 0 0 30px rgba(0, 245, 255, 0.1);
+            }
+            50% {
+                transform: scale(1.02);
+                box-shadow:
+                    0 0 50px rgba(0, 245, 255, 0.5),
+                    0 0 100px rgba(0, 245, 255, 0.3),
+                    inset 0 0 50px rgba(0, 245, 255, 0.2);
+            }
+        }
+
+        .hub-core::before {
+            content: '';
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            animation: ringExpand 4s ease-out infinite;
+        }
+
+        .hub-core::after {
+            content: '';
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 0, 255, 0.2);
+            animation: ringExpand 4s ease-out infinite 2s;
+        }
+
+        @keyframes ringExpand {
+            0% { transform: scale(0.9); opacity: 1; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+
+        .hub-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--cyan);
+            text-shadow: 0 0 10px var(--cyan);
+            margin-bottom: 4px;
+        }
+
+        .hub-subtitle {
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 0 20px var(--cyan);
+        }
+
+        .hub-label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 8px;
+            color: rgba(0, 245, 255, 0.7);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* Domain nodes */
+        .domain-node {
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .node-outer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            animation: nodeRotate 20s linear infinite;
+        }
+
+        .node-outer::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            width: 4px;
+            height: 4px;
+            background: var(--cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--cyan);
+        }
+
+        @keyframes nodeRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .node-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%,
+                rgba(0, 245, 255, 0.15) 0%,
+                rgba(0, 20, 40, 0.9) 70%
+            );
+            border: 2px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .domain-node.active .node-inner {
+            box-shadow:
+                0 0 40px currentColor,
+                0 0 80px currentColor,
+                inset 0 0 30px rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .node-icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+
+        .node-label {
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.2;
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        .node-id {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 7px;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .domain-node:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            z-index: 20;
+        }
+
+        .domain-node:hover .node-inner {
+            box-shadow:
+                0 0 30px currentColor,
+                0 0 60px currentColor,
+                inset 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Process ring */
+        .process-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            border: 1px dashed rgba(0, 245, 255, 0.2);
+            animation: processRotate 60s linear infinite reverse;
+        }
+
+        @keyframes processRotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .process-label {
+            position: absolute;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            color: rgba(0, 245, 255, 0.5);
+            white-space: nowrap;
+        }
+
+        /* Connection paths */
+        .connection-path {
+            fill: none;
+            stroke-width: 1.5;
+            opacity: 0.4;
+            filter: drop-shadow(0 0 3px currentColor);
+            transition: all 0.3s ease;
+        }
+
+        .connection-path.active {
+            opacity: 1;
+            stroke-width: 2.5;
+            filter: drop-shadow(0 0 10px currentColor);
+        }
+
+        /* Particle canvas */
+        #particleCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Detail panel */
+        .detail-panel {
+            position: fixed;
+            right: -500px;
+            top: 0;
+            width: 480px;
+            height: 100vh;
+            background: linear-gradient(135deg, rgba(10, 10, 20, 0.98) 0%, rgba(5, 5, 15, 0.98) 100%);
+            border-left: 1px solid var(--cyan);
+            z-index: 500;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+        }
+
+        .detail-panel.open {
+            right: 0;
+        }
+
+        .detail-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .detail-panel::-webkit-scrollbar-track {
+            background: rgba(0, 245, 255, 0.1);
+        }
+
+        .detail-panel::-webkit-scrollbar-thumb {
+            background: var(--cyan);
+            border-radius: 2px;
+        }
+
+        .panel-header {
+            position: sticky;
+            top: 0;
+            padding: 25px 30px;
+            background: linear-gradient(180deg, rgba(10, 10, 20, 1) 0%, rgba(10, 10, 20, 0.95) 100%);
+            border-bottom: 1px solid rgba(0, 245, 255, 0.2);
+            z-index: 10;
+        }
+
+        .panel-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--cyan);
+            background: transparent;
+            color: var(--cyan);
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .panel-close:hover {
+            background: var(--cyan);
+            color: var(--deep-void);
+            box-shadow: 0 0 20px var(--cyan);
+        }
+
+        .panel-domain-id {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+        }
+
+        .panel-domain-name {
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px currentColor;
+        }
+
+        .panel-domain-desc {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+        }
+
+        .panel-content {
+            padding: 20px 30px 40px;
+        }
+
+        .process-item {
+            margin-bottom: 20px;
+            padding: 18px;
+            background: rgba(0, 245, 255, 0.03);
+            border: 1px solid rgba(0, 245, 255, 0.15);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .process-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--cyan);
+            opacity: 0.5;
+        }
+
+        .process-item:hover {
+            background: rgba(0, 245, 255, 0.08);
+            border-color: rgba(0, 245, 255, 0.3);
+            transform: translateX(5px);
+        }
+
+        .process-item:hover::before {
+            opacity: 1;
+            box-shadow: 0 0 10px var(--cyan);
+        }
+
+        .process-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .process-code {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            background: rgba(0, 245, 255, 0.15);
+            border: 1px solid var(--cyan);
+            border-radius: 3px;
+            color: var(--cyan);
+            text-shadow: 0 0 8px var(--cyan);
+        }
+
+        .process-name {
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .process-text {
+            font-size: 12px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.85);
+            padding-left: 4px;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 20px;
+            left: 30px;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 400;
+            letter-spacing: 6px;
+            color: var(--cyan);
+            text-shadow: 0 0 20px var(--cyan);
+            animation: headerGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes headerGlow {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .header-sub {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            color: rgba(0, 245, 255, 0.5);
+            margin-top: 4px;
+            letter-spacing: 2px;
+        }
+
+        /* Instructions */
+        .instructions {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 100;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: rgba(0, 245, 255, 0.5);
+        }
+
+        .instructions span {
+            display: inline-block;
+            padding: 4px 10px;
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+
+        /* Floating data points */
+        .data-float {
+            position: absolute;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            color: rgba(0, 245, 255, 0.3);
+            pointer-events: none;
+            animation: dataFloat 20s linear infinite;
+        }
+
+        @keyframes dataFloat {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.3; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Process legend on left */
+        .process-legend {
+            position: fixed;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 4px 8px;
+            border-left: 2px solid var(--cyan);
+            transition: all 0.2s ease;
+        }
+
+        .legend-item:hover {
+            color: white;
+            border-left-color: var(--magenta);
+            background: rgba(0, 245, 255, 0.05);
+        }
+
+        .legend-code {
+            color: var(--cyan);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="glitch-overlay"></div>
+    <div class="grid-bg"></div>
+
+    <div class="header">
+        <h1>NEURAL GOVERNANCE NETWORK</h1>
+        <div class="header-sub">AI UTILIZATION FRAMEWORK v2.0</div>
+    </div>
+
+    <div class="process-legend">
+        <div class="legend-item"><span class="legend-code">R1</span> 方針・責任</div>
+        <div class="legend-item"><span class="legend-code">R2</span> リスク評価</div>
+        <div class="legend-item"><span class="legend-code">R3</span> 設計・検証</div>
+        <div class="legend-item"><span class="legend-code">R4</span> 資産・ログ</div>
+        <div class="legend-item"><span class="legend-code">R5</span> 監視・検知</div>
+        <div class="legend-item"><span class="legend-code">R6</span> 封じ込め・復旧</div>
+        <div class="legend-item"><span class="legend-code">R7</span> 対外対応</div>
+        <div class="legend-item"><span class="legend-code">R8</span> 改善・是正</div>
+    </div>
+
+    <div class="instructions">
+        <span>CLICK</span> ノードをクリックで詳細表示
+    </div>
+
+    <div class="container">
+        <div class="viz-container" id="vizContainer">
+            <canvas id="particleCanvas"></canvas>
+
+            <svg class="connections-svg" viewBox="0 0 800 800">
+                <defs>
+                    <filter id="glow">
+                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                        <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <g id="connections" filter="url(#glow)"></g>
+            </svg>
+
+            <div class="process-ring">
+                <div class="process-label" style="top: -15px; left: 50%; transform: translateX(-50%);">R1</div>
+                <div class="process-label" style="top: 12%; right: -5%;">R2</div>
+                <div class="process-label" style="top: 50%; right: -20px; transform: translateY(-50%);">R3</div>
+                <div class="process-label" style="bottom: 12%; right: -5%;">R4</div>
+                <div class="process-label" style="bottom: -15px; left: 50%; transform: translateX(-50%);">R5</div>
+                <div class="process-label" style="bottom: 12%; left: -5%;">R6</div>
+                <div class="process-label" style="top: 50%; left: -20px; transform: translateY(-50%);">R7</div>
+                <div class="process-label" style="top: 12%; left: -5%;">R8</div>
+            </div>
+
+            <div class="central-hub">
+                <div class="hub-core">
+                    <div class="hub-title">AI GOVERNANCE</div>
+                    <div class="hub-subtitle">AI利活用</div>
+                    <div class="hub-subtitle">ガバナンス</div>
+                    <div class="hub-label">8 DOMAINS × 8 PROCESSES</div>
+                </div>
+            </div>
+
+            <!-- Domain nodes -->
+            <div class="domain-node" data-domain="0">
+                <div class="node-outer"></div>
+                <div class="node-inner" style="color: var(--cyan); border-color: var(--cyan);">
+                    <div class="node-icon">👁</div>
+                    <div class="node-label">人間監督</div>
+                    <div class="node-id">01</div>
+                </div>
+            </div>
+
+            <div class="domain-node" data-domain="1">
+                <div class="node-outer" style="animation-direction: reverse;"></div>
+                <div class="node-inner" style="color: var(--magenta); border-color: var(--magenta);">
+                    <div class="node-icon">🔐</div>
+                    <div class="node-label">プライバシー</div>
+                    <div class="node-id">02</div>
+                </div>
+            </div>
+
+            <div class="domain-node" data-domain="2">
+                <div class="node-outer"></div>
+                <div class="node-inner" style="color: var(--neon-green); border-color: var(--neon-green);">
+                    <div class="node-icon">◇</div>
+                    <div class="node-label">透明性</div>
+                    <div class="node-id">03</div>
+                </div>
+            </div>
+
+            <div class="domain-node" data-domain="3">
+                <div class="node-outer" style="animation-direction: reverse;"></div>
+                <div class="node-inner" style="color: var(--electric-blue); border-color: var(--electric-blue);">
+                    <div class="node-icon">⚖</div>
+                    <div class="node-label">公平性</div>
+                    <div class="node-id">04</div>
+                </div>
+            </div>
+
+            <div class="domain-node" data-domain="4">
+                <div class="node-outer"></div>
+                <div class="node-inner" style="color: var(--orange); border-color: var(--orange);">
+                    <div class="node-icon">🛡</div>
+                    <div class="node-label">安全性</div>
+                    <div class="node-id">05</div>
+                </div>
+            </div>
+
+            <div class="domain-node" data-domain="5">
+                <div class="node-outer" style="animation-direction: reverse;"></div>
+                <div class="node-inner" style="color: var(--yellow); border-color: var(--yellow);">
+                    <div class="node-icon">📋</div>
+                    <div class="node-label">説明責任</div>
+                    <div class="node-id">06</div>
+                </div>
+            </div>
+
+            <div class="domain-node" data-domain="6">
+                <div class="node-outer"></div>
+                <div class="node-inner" style="color: var(--purple); border-color: var(--purple);">
+                    <div class="node-icon">⚙</div>
+                    <div class="node-label">コンプラ</div>
+                    <div class="node-id">07</div>
+                </div>
+            </div>
+
+            <div class="domain-node" data-domain="7">
+                <div class="node-outer" style="animation-direction: reverse;"></div>
+                <div class="node-inner" style="color: var(--teal); border-color: var(--teal);">
+                    <div class="node-icon">♡</div>
+                    <div class="node-label">メンタル</div>
+                    <div class="node-id">08</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-panel" id="detailPanel">
+        <div class="panel-header">
+            <button class="panel-close" id="panelClose">×</button>
+            <div class="panel-domain-id" id="panelDomainId">DOMAIN.01</div>
+            <div class="panel-domain-name" id="panelDomainName">人間監督</div>
+            <div class="panel-domain-desc" id="panelDomainDesc">AIの判断に対する人間の最終決定権・介入・オーバーライド機能</div>
+        </div>
+        <div class="panel-content" id="panelContent">
+            <!-- Process items will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Domain data
+        const domainData = [
+            {
+                id: '01',
+                name: '人間監督',
+                nameEn: 'Human Oversight',
+                color: '#00f5ff',
+                desc: 'AIの判断に対する人間の最終決定権・介入・オーバーライド機能の確保',
+                processes: [
+                    { code: 'R1', name: '方針・責任', text: 'AIの判断に対して、人間が最終決定や承認を行う範囲・権限・責任者が明確に規定・文書化されているか。' },
+                    { code: 'R2', name: 'リスク評価', text: '人間の介入（HIC/HITL）が不可欠な高リスクな利用シナリオや例外ケースが特定・評価されているか。' },
+                    { code: 'R3', name: '設計・検証', text: '異常時に人間が即座にAIを停止、または判断を上書き（オーバーライド）できる機能が実装・検証されているか。' },
+                    { code: 'R4', name: '資産・ログ', text: '人間による承認、介入、上書き操作の記録が、監査証跡として確実に保全されているか。' },
+                    { code: 'R5', name: '監視・検知', text: 'AIの判断精度劣化や暴走の兆候を検知し、監督者へ即座に通知する監視体制があるか。' },
+                    { code: 'R6', name: '封じ込め・復旧', text: '人間が介入してAIを停止させた後、手動業務への切り替えや安全な復旧を行う手順が整備されているか。' },
+                    { code: 'R7', name: '対外対応', text: '重要な決定に際して「人間が関与している」事実を、利用者や関係者へ適切に説明・通知できるか。' },
+                    { code: 'R8', name: '改善・是正', text: '人間監督が機能しなかった事例やヒヤリハットを分析し、監督体制や介入基準の見直しを行っているか。' }
+                ]
+            },
+            {
+                id: '02',
+                name: 'プライバシー・データガバナンス',
+                nameEn: 'Privacy & Data Governance',
+                color: '#ff00ff',
+                desc: '個人情報保護とデータの適正な管理・利用の確保',
+                processes: [
+                    { code: 'R1', name: '方針・責任', text: '個人情報保護方針、データの目的外利用禁止、最小化の原則が規定され、責任者が明確か。' },
+                    { code: 'R2', name: 'リスク評価', text: 'AI利用に伴うプライバシー影響評価（PIA）を実施し、データ主体の権利侵害リスクを評価しているか。' },
+                    { code: 'R3', name: '設計・検証', text: 'プライバシー保護技術（匿名化、秘密計算等）の導入や、学習データからの不適切な個人特定排除が検証されているか。' },
+                    { code: 'R4', name: '資産・ログ', text: '学習・推論に用いるデータセットの台帳が整備され、利用履歴、アクセスログ、削除記録が保全されているか。' },
+                    { code: 'R5', name: '監視・検知', text: '目的外のデータアクセスや、異常なデータ持ち出し等を検知する仕組みはあるか。' },
+                    { code: 'R6', name: '封じ込め・復旧', text: 'データ漏えい発生時に、対象データの隔離やアクセス権限の停止を迅速に行う手順はあるか。' },
+                    { code: 'R7', name: '対外対応', text: 'データ主体からの開示・訂正・削除請求（オプトアウト含む）に対応する手順と体制は確立しているか。' },
+                    { code: 'R8', name: '改善・是正', text: 'データ取り扱いに関するインシデントや法令改正に基づき、ガバナンス体制を継続的に改善しているか。' }
+                ]
+            },
+            {
+                id: '03',
+                name: '透明性',
+                nameEn: 'Transparency',
+                color: '#00ff88',
+                desc: 'AI利用の開示と能力・限界の適切な説明',
+                processes: [
+                    { code: 'R1', name: '方針・責任', text: 'AIの利用目的、能力の限界、前提条件を利用者へ開示する方針が定められているか。' },
+                    { code: 'R2', name: 'リスク評価', text: '透明性の欠如が利用者の誤解や誤用を招くリスクを評価し、開示すべき情報レベルを定義しているか。' },
+                    { code: 'R3', name: '設計・検証', text: '利用者が「AIと対話していること」を認識できるUI/UXが設計され、誤認防止が検証されているか。' },
+                    { code: 'R4', name: '資産・ログ', text: '利用者に対していつ、どのような情報を開示・説明したかの記録（バージョン管理含む）を保全しているか。' },
+                    { code: 'R5', name: '監視・検知', text: '利用者からの「分かりにくい」「誤解した」といったフィードバックや苦情を検知・収集する窓口はあるか。' },
+                    { code: 'R6', name: '封じ込め・復旧', text: 'AIの表示内容に重大な誤りが見つかった場合、即座に修正情報や注意喚起を利用者へ通知する手順はあるか。' },
+                    { code: 'R7', name: '対外対応', text: 'ステークホルダー（顧客、取引先等）に対し、AIシステムの概要やリスク情報を適切に開示・説明できるか。' },
+                    { code: 'R8', name: '改善・是正', text: '利用者の理解度調査や誤用事例に基づき、説明内容やUIの改善を継続的に行っているか。' }
+                ]
+            },
+            {
+                id: '04',
+                name: '公平性',
+                nameEn: 'Fairness',
+                color: '#0066ff',
+                desc: '差別・バイアスの防止と公平な判断の確保',
+                processes: [
+                    { code: 'R1', name: '方針・責任', text: 'AIによる差別（特定の属性への不利益な扱い）を禁止する方針と、公平性の定義・指標が明確化されているか。' },
+                    { code: 'R2', name: 'リスク評価', text: '学習データやアルゴリズムに含まれるバイアスがもたらす差別的影響のリスクを評価しているか。' },
+                    { code: 'R3', name: '設計・検証', text: 'リリース前に、定義した公平性指標に基づいたバイアス検知テストや緩和措置の有効性検証を行っているか。' },
+                    { code: 'R4', name: '資産・ログ', text: '公平性検証に使用したデータセット、評価指標、テスト結果の記録が保全されているか。' },
+                    { code: 'R5', name: '監視・検知', text: '運用中のAI出力に特定の層への偏りが生じていないか、継続的にモニタリングしているか。' },
+                    { code: 'R6', name: '封じ込め・復旧', text: '差別的な出力が検知された場合、当該モデルの利用停止やロールバックを行う手順はあるか。' },
+                    { code: 'R7', name: '対外対応', text: 'AIの判断によって不利益を被ったと感じた利用者からの申立てを受け付け、救済するプロセスはあるか。' },
+                    { code: 'R8', name: '改善・是正', text: 'バイアス検知の結果や申立て内容に基づき、学習データの見直しやモデルの再学習を実施しているか。' }
+                ]
+            },
+            {
+                id: '05',
+                name: '安全性・セキュリティ',
+                nameEn: 'Safety & Security',
+                color: '#ff6600',
+                desc: 'AIシステムに対する攻撃対策と堅牢性の確保',
+                processes: [
+                    { code: 'R1', name: '方針・責任', text: 'AIシステム固有の脅威（敵対的攻撃、プロンプト注入等）を含むセキュリティ対策基準が規定されているか。' },
+                    { code: 'R2', name: 'リスク評価', text: 'AIに対する攻撃や悪用が事業や利用者に与える影響度（セーフティリスク含む）を評価・分類しているか。' },
+                    { code: 'R3', name: '設計・検証', text: 'モデルの堅牢性（ロバストネス）検証やレッドチーミングを実施し、ガードレール機能の実効性を確認しているか。' },
+                    { code: 'R4', name: '資産・ログ', text: 'AIモデル、学習データ等の重要資産が台帳管理され、改ざん検知やアクセス制御がログで担保されているか。' },
+                    { code: 'R5', name: '監視・検知', text: 'AIへの異常な入力（攻撃的なプロンプト等）や不正な挙動をリアルタイムで検知する仕組みはあるか。' },
+                    { code: 'R6', name: '封じ込め・復旧', text: 'セキュリティインシデント発生時のシステム隔離、被害拡大防止、安全な復旧手順が確立しているか。' },
+                    { code: 'R7', name: '対外対応', text: '攻撃による情報漏えいやサービス停止が発生した際、関係当局や被害者への通知フローは整備されているか。' },
+                    { code: 'R8', name: '改善・是正', text: '新たな攻撃手法やインシデント分析に基づき、防御モデルやセキュリティ対策を迅速にアップデートしているか。' }
+                ]
+            },
+            {
+                id: '06',
+                name: '説明責任',
+                nameEn: 'Accountability',
+                color: '#ffcc00',
+                desc: '役割と責任の明確化および判断根拠の説明能力',
+                processes: [
+                    { code: 'R1', name: '方針・責任', text: 'AIシステムに関わる開発者、提供者、利用者の役割と責任分界点が明確に定義・文書化されているか。' },
+                    { code: 'R2', name: 'リスク評価', text: 'AIの判断結果に対する説明が求められるレベル（重大度）に応じ、必要な説明能力を定義・評価しているか。' },
+                    { code: 'R3', name: '設計・検証', text: 'AIの推論結果の根拠（特徴量の寄与度等）を提示する技術（XAI）や手法が導入・検証されているか。' },
+                    { code: 'R4', name: '資産・ログ', text: '個別の判断結果について、「なぜその結論に至ったか」を事後的に追跡・説明できる証跡が記録されているか。' },
+                    { code: 'R5', name: '監視・検知', text: '説明が困難な挙動や、責任の所在が曖昧になりうる状況を検知する仕組みはあるか。' },
+                    { code: 'R6', name: '封じ込め・復旧', text: '責任追及が発生した際の対応チーム組成手順はあるか。' },
+                    { code: 'R7', name: '対外対応', text: 'AIの判断結果について監査人や当局から説明を求められた際、合理的な根拠に基づき回答できる体制があるか。' },
+                    { code: 'R8', name: '改善・是正', text: '説明責任を果たせなかった事例に基づき、記録プロセスや責任分界点の見直しを行っているか。' }
+                ]
+            },
+            {
+                id: '07',
+                name: 'ガバナンス・コンプライアンス',
+                nameEn: 'Governance & Compliance',
+                color: '#cc00ff',
+                desc: '法令遵守と内部統制の確保',
+                processes: [
+                    { code: 'R1', name: '方針・責任', text: 'AI利活用に関する全社的な基本方針、適用法令、内部規程体系が整備・周知されているか。' },
+                    { code: 'R2', name: 'リスク評価', text: '適用される法令・規制（著作権法、個人情報保護法、業法等）及び契約上の義務違反リスクを特定・評価しているか。' },
+                    { code: 'R3', name: '設計・検証', text: '外部委託先や利用するSaaSの選定基準にAIガバナンス要件が含まれ、契約前に検証されているか。' },
+                    { code: 'R4', name: '資産・ログ', text: 'ガバナンス活動の記録（会議議事録、承認記録、監査報告書等）が適切に保管されているか。' },
+                    { code: 'R5', name: '監視・検知', text: '法令違反や内部規程違反の予兆を検知する内部通報制度やモニタリング体制は機能しているか。' },
+                    { code: 'R6', name: '封じ込め・復旧', text: '重大なコンプライアンス違反が発覚した際の即時報告ルートと緊急対応体制は整備されているか。' },
+                    { code: 'R7', name: '対外対応', text: '規制当局への報告義務や、外部監査への対応手順が明確化されているか。' },
+                    { code: 'R8', name: '改善・是正', text: '定期的な内部監査や外部評価を実施し、指摘事項に基づいてガバナンス体制を継続的に改善しているか。' }
+                ]
+            },
+            {
+                id: '08',
+                name: 'メンタル持続性',
+                nameEn: 'Mental Sustainability',
+                color: '#00ffcc',
+                desc: '従業員・利用者の心理的負荷への配慮と人間中心の運用',
+                processes: [
+                    { code: 'R1', name: '方針・責任', text: 'AI利活用が従業員や利用者の精神的健康を損なわないよう、人間中心の運用方針が定められているか。' },
+                    { code: 'R2', name: 'リスク評価', text: '常時接続、情報過多、判断プレッシャー等、AIが人間に与える心理的負荷・ストレスリスクを評価しているか。' },
+                    { code: 'R3', name: '設計・検証', text: '認知負荷を低減し、過度な依存や不安を生まないUI/UXや業務プロセスが設計・検証されているか。' },
+                    { code: 'R4', name: '資産・ログ', text: 'AI関連業務に従事する担当者の労働時間、ストレスチェック結果等の健康指標データを管理しているか。' },
+                    { code: 'R5', name: '監視・検知', text: '運用担当者の燃え尽き（バーンアウト）の兆候や、過度な負担集中を検知する仕組みはあるか。' },
+                    { code: 'R6', name: '封じ込め・復旧', text: '担当者のメンタル不調発生時に、業務から一時的に離脱させ、サポートする体制はあるか。' },
+                    { code: 'R7', name: '対外対応', text: '自社のAIが、利用者（特に子供や脆弱な立場の人）の精神的健康に悪影響を与えない配慮がなされているか。' },
+                    { code: 'R8', name: '改善・是正', text: '従業員サーベイや健康データに基づき、AIを用いた業務フローや人員体制の見直しを行っているか。' }
+                ]
+            }
+        ];
+
+        const nodeColors = ['#00f5ff', '#ff00ff', '#00ff88', '#0066ff', '#ff6600', '#ffcc00', '#cc00ff', '#00ffcc'];
+
+        // Position nodes
+        const nodes = document.querySelectorAll('.domain-node');
+        const centerX = 400;
+        const centerY = 400;
+        const radius = 280;
+
+        nodes.forEach((node, i) => {
+            const angle = (i * Math.PI * 2 / 8) - Math.PI / 2;
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY + radius * Math.sin(angle);
+            node.style.left = x + 'px';
+            node.style.top = y + 'px';
+        });
+
+        // Draw connections
+        const connectionsGroup = document.getElementById('connections');
+
+        function createConnection(from, to, color) {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const fromAngle = (from * Math.PI * 2 / 8) - Math.PI / 2;
+            const toAngle = (to * Math.PI * 2 / 8) - Math.PI / 2;
+
+            const fromX = centerX + radius * Math.cos(fromAngle);
+            const fromY = centerY + radius * Math.sin(fromAngle);
+            const toX = centerX + radius * Math.cos(toAngle);
+            const toY = centerY + radius * Math.sin(toAngle);
+
+            const ctrlX1 = fromX + (centerX - fromX) * 0.6;
+            const ctrlY1 = fromY + (centerY - fromY) * 0.6;
+            const ctrlX2 = toX + (centerX - toX) * 0.6;
+            const ctrlY2 = toY + (centerY - toY) * 0.6;
+
+            path.setAttribute('d', `M ${fromX} ${fromY} C ${ctrlX1} ${ctrlY1}, ${ctrlX2} ${ctrlY2}, ${toX} ${toY}`);
+            path.setAttribute('stroke', color);
+            path.classList.add('connection-path');
+            path.dataset.from = from;
+            path.dataset.to = to;
+
+            connectionsGroup.appendChild(path);
+        }
+
+        for (let i = 0; i < 8; i++) {
+            createConnection(i, (i + 1) % 8, nodeColors[i]);
+            createConnection(i, (i + 4) % 8, nodeColors[i]);
+        }
+
+        // Particle system
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                const angle = Math.random() * Math.PI * 2;
+                const r = 80 + Math.random() * 220;
+                this.x = canvas.width / 2 + r * Math.cos(angle);
+                this.y = canvas.height / 2 + r * Math.sin(angle);
+                this.speed = 0.2 + Math.random() * 0.4;
+                this.size = 1 + Math.random() * 2;
+                this.color = nodeColors[Math.floor(Math.random() * nodeColors.length)];
+                this.alpha = 0.2 + Math.random() * 0.4;
+                this.life = 0;
+                this.maxLife = 150 + Math.random() * 200;
+            }
+
+            update() {
+                const cX = canvas.width / 2;
+                const cY = canvas.height / 2;
+                const dx = this.x - cX;
+                const dy = this.y - cY;
+                const currentAngle = Math.atan2(dy, dx);
+                const r = Math.sqrt(dx * dx + dy * dy);
+
+                const newAngle = currentAngle + 0.004;
+                const newR = r + Math.sin(this.life * 0.03) * 0.3;
+
+                this.x = cX + newR * Math.cos(newAngle);
+                this.y = cY + newR * Math.sin(newAngle);
+
+                this.life++;
+                if (this.life > this.maxLife) this.reset();
+            }
+
+            draw() {
+                const fadeIn = Math.min(this.life / 30, 1);
+                const fadeOut = Math.max(0, 1 - (this.life - this.maxLife + 30) / 30);
+                const alpha = this.alpha * fadeIn * fadeOut;
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = alpha;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
+                gradient.addColorStop(0, this.color);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.globalAlpha = alpha * 0.3;
+                ctx.fill();
+            }
+        }
+
+        const particles = [];
+        for (let i = 0; i < 60; i++) {
+            const p = new Particle();
+            p.life = Math.random() * p.maxLife;
+            particles.push(p);
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.globalAlpha = 1;
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Panel functionality
+        const detailPanel = document.getElementById('detailPanel');
+        const panelClose = document.getElementById('panelClose');
+        const panelDomainId = document.getElementById('panelDomainId');
+        const panelDomainName = document.getElementById('panelDomainName');
+        const panelDomainDesc = document.getElementById('panelDomainDesc');
+        const panelContent = document.getElementById('panelContent');
+        const vizContainer = document.getElementById('vizContainer');
+
+        let activeNode = null;
+
+        function openPanel(domainIndex) {
+            const domain = domainData[domainIndex];
+
+            // Update header with domain color
+            panelDomainId.textContent = `DOMAIN.${domain.id}`;
+            panelDomainId.style.color = domain.color;
+            panelDomainName.textContent = domain.name;
+            panelDomainName.style.color = domain.color;
+            panelDomainDesc.textContent = domain.desc;
+
+            // Build process items
+            panelContent.innerHTML = domain.processes.map(proc => `
+                <div class="process-item" style="--accent: ${domain.color}">
+                    <div class="process-header">
+                        <span class="process-code" style="border-color: ${domain.color}; color: ${domain.color}; background: ${domain.color}15;">${proc.code}</span>
+                        <span class="process-name">${proc.name}</span>
+                    </div>
+                    <div class="process-text">${proc.text}</div>
+                </div>
+            `).join('');
+
+            // Update panel border color
+            detailPanel.style.borderLeftColor = domain.color;
+
+            // Open panel
+            detailPanel.classList.add('open');
+            vizContainer.classList.add('shifted');
+
+            // Highlight active node
+            if (activeNode) activeNode.classList.remove('active');
+            activeNode = nodes[domainIndex];
+            activeNode.classList.add('active');
+
+            // Highlight connections
+            document.querySelectorAll('.connection-path').forEach(path => {
+                const from = parseInt(path.dataset.from);
+                const to = parseInt(path.dataset.to);
+                if (from === domainIndex || to === domainIndex) {
+                    path.classList.add('active');
+                } else {
+                    path.classList.remove('active');
+                }
+            });
+        }
+
+        function closePanel() {
+            detailPanel.classList.remove('open');
+            vizContainer.classList.remove('shifted');
+            if (activeNode) {
+                activeNode.classList.remove('active');
+                activeNode = null;
+            }
+            document.querySelectorAll('.connection-path').forEach(path => {
+                path.classList.remove('active');
+            });
+        }
+
+        nodes.forEach((node, i) => {
+            node.addEventListener('click', () => openPanel(i));
+        });
+
+        panelClose.addEventListener('click', closePanel);
+
+        // Close on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePanel();
+        });
+
+        // Floating data
+        function createDataFloat() {
+            const container = document.querySelector('.container');
+            const data = document.createElement('div');
+            data.className = 'data-float';
+            data.textContent = `0x${Math.random().toString(16).substr(2, 8).toUpperCase()}`;
+            data.style.left = Math.random() * 100 + '%';
+            data.style.top = '100%';
+            data.style.animationDelay = Math.random() * 5 + 's';
+            container.appendChild(data);
+            setTimeout(() => data.remove(), 20000);
+        }
+
+        setInterval(createDataFloat, 3000);
+        for (let i = 0; i < 3; i++) setTimeout(createDataFloat, i * 500);
+    </script>
+</body>
+</html>
