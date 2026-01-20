@@ -654,6 +654,429 @@
         .tooltip.visible {
             opacity: 1;
         }
+
+        /* Quiz Modal */
+        .quiz-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .quiz-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .quiz-modal {
+            background: linear-gradient(135deg, rgba(0, 20, 40, 0.98) 0%, rgba(10, 10, 30, 0.98) 100%);
+            border: 2px solid var(--cyan);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: hidden;
+            transform: scale(0.8) translateY(50px);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 60px rgba(0, 245, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .quiz-overlay.active .quiz-modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .quiz-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid rgba(0, 245, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--cyan), var(--magenta), transparent);
+            animation: quizHeaderGlow 2s ease infinite;
+        }
+
+        @keyframes quizHeaderGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .quiz-domain-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border: 1px solid;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .quiz-domain-tag .icon {
+            font-size: 16px;
+        }
+
+        .quiz-process-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .quiz-process-code {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border: 2px solid var(--cyan);
+            border-radius: 4px;
+            color: var(--cyan);
+        }
+
+        .quiz-process-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .quiz-challenge-label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--magenta);
+            text-transform: uppercase;
+        }
+
+        .quiz-body {
+            padding: 25px 30px;
+        }
+
+        .quiz-question {
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(0, 245, 255, 0.05);
+            border-left: 3px solid var(--cyan);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .quiz-option {
+            padding: 15px 20px;
+            background: rgba(0, 10, 20, 0.6);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-option::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--cyan);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--cyan);
+            background: rgba(0, 245, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .quiz-option:hover::before {
+            opacity: 1;
+        }
+
+        .quiz-option.selected {
+            border-color: var(--magenta);
+            background: rgba(255, 0, 255, 0.1);
+        }
+
+        .quiz-option.selected::before {
+            background: var(--magenta);
+            opacity: 1;
+        }
+
+        .quiz-option.correct {
+            border-color: var(--neon-green);
+            background: rgba(0, 255, 136, 0.15);
+            animation: correctPulse 0.5s ease;
+        }
+
+        .quiz-option.correct::before {
+            background: var(--neon-green);
+            opacity: 1;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { box-shadow: 0 0 0 rgba(0, 255, 136, 0); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 136, 0.5); }
+        }
+
+        .quiz-option.incorrect {
+            border-color: #ff4444;
+            background: rgba(255, 68, 68, 0.15);
+            animation: incorrectShake 0.5s ease;
+        }
+
+        .quiz-option.incorrect::before {
+            background: #ff4444;
+            opacity: 1;
+        }
+
+        @keyframes incorrectShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        .quiz-option-marker {
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(0, 245, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover .quiz-option-marker {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .quiz-option.selected .quiz-option-marker {
+            border-color: var(--magenta);
+            background: var(--magenta);
+            color: white;
+        }
+
+        .quiz-option.correct .quiz-option-marker {
+            border-color: var(--neon-green);
+            background: var(--neon-green);
+            color: var(--deep-void);
+        }
+
+        .quiz-option.incorrect .quiz-option-marker {
+            border-color: #ff4444;
+            background: #ff4444;
+            color: white;
+        }
+
+        .quiz-option-text {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .quiz-footer {
+            padding: 20px 30px;
+            border-top: 1px solid rgba(0, 245, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .quiz-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .quiz-stat {
+            text-align: center;
+        }
+
+        .quiz-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .quiz-stat-label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .quiz-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .quiz-btn {
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .quiz-btn-submit {
+            background: linear-gradient(135deg, var(--cyan) 0%, var(--electric-blue) 100%);
+            color: var(--deep-void);
+            font-weight: 700;
+        }
+
+        .quiz-btn-submit:hover:not(:disabled) {
+            box-shadow: 0 0 30px var(--cyan);
+            transform: translateY(-2px);
+        }
+
+        .quiz-btn-submit:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .quiz-btn-skip {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .quiz-btn-skip:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+        }
+
+        /* Combo Display */
+        .combo-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--yellow);
+            text-shadow: 0 0 30px var(--yellow), 0 0 60px var(--orange);
+            z-index: 6000;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .combo-display.show {
+            transform: translate(-50%, -50%) scale(1);
+            animation: comboPop 0.8s ease forwards;
+        }
+
+        @keyframes comboPop {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            40% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-50%, -60%) scale(1); opacity: 0; }
+        }
+
+        .combo-display .combo-text {
+            font-size: 20px;
+            display: block;
+            color: var(--orange);
+        }
+
+        /* Quiz Result Animation */
+        .quiz-result {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            z-index: 6000;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .quiz-result.show {
+            animation: resultShow 1.5s ease forwards;
+        }
+
+        @keyframes resultShow {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            40% { transform: translate(-50%, -50%) scale(1); }
+            70% { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -60%) scale(1); }
+        }
+
+        .quiz-result.correct .result-icon {
+            font-size: 80px;
+            display: block;
+            margin-bottom: 10px;
+            animation: iconBounce 0.5s ease infinite;
+        }
+
+        .quiz-result.correct .result-text {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--neon-green);
+            text-shadow: 0 0 30px var(--neon-green);
+        }
+
+        .quiz-result.correct .result-xp {
+            font-size: 24px;
+            color: var(--yellow);
+            text-shadow: 0 0 20px var(--yellow);
+            margin-top: 10px;
+        }
+
+        .quiz-result.incorrect .result-icon {
+            font-size: 80px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .quiz-result.incorrect .result-text {
+            font-size: 32px;
+            font-weight: 900;
+            color: #ff4444;
+            text-shadow: 0 0 30px #ff4444;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
     </style>
 </head>
 <body>
@@ -735,6 +1158,7 @@
         <div><span class="key">DRAG</span> Rotate View</div>
         <div><span class="key">SCROLL</span> Zoom</div>
         <div><span class="key">CLICK</span> Select Node</div>
+        <div><span class="key">⚔</span> Answer Quiz to Conquer</div>
     </div>
 
     <!-- Achievement Popup -->
@@ -748,6 +1172,60 @@
 
     <!-- Tooltip -->
     <div class="tooltip" id="tooltip"></div>
+
+    <!-- Quiz Overlay -->
+    <div class="quiz-overlay" id="quizOverlay">
+        <div class="quiz-modal">
+            <div class="quiz-header">
+                <div class="quiz-domain-tag" id="quizDomainTag">
+                    <span class="icon">👁</span>
+                    <span>人間監督</span>
+                </div>
+                <div class="quiz-process-info">
+                    <span class="quiz-process-code" id="quizProcessCode">R1</span>
+                    <span class="quiz-process-name" id="quizProcessName">方針・責任</span>
+                </div>
+                <div class="quiz-challenge-label">⚔ CHALLENGE TO CONQUER ⚔</div>
+            </div>
+            <div class="quiz-body">
+                <div class="quiz-question" id="quizQuestion">
+                    この項目を攻略するためのチャレンジに答えてください。
+                </div>
+                <div class="quiz-options" id="quizOptions">
+                    <!-- Options will be generated dynamically -->
+                </div>
+            </div>
+            <div class="quiz-footer">
+                <div class="quiz-stats">
+                    <div class="quiz-stat">
+                        <div class="quiz-stat-value" id="quizCombo" style="color: var(--yellow);">0</div>
+                        <div class="quiz-stat-label">COMBO</div>
+                    </div>
+                    <div class="quiz-stat">
+                        <div class="quiz-stat-value" id="quizStreak" style="color: var(--neon-green);">0</div>
+                        <div class="quiz-stat-label">STREAK</div>
+                    </div>
+                </div>
+                <div class="quiz-buttons">
+                    <button class="quiz-btn quiz-btn-skip" onclick="closeQuiz()">CANCEL</button>
+                    <button class="quiz-btn quiz-btn-submit" id="quizSubmitBtn" onclick="submitQuiz()" disabled>SUBMIT</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Combo Display -->
+    <div class="combo-display" id="comboDisplay">
+        <span class="combo-count">5</span>
+        <span class="combo-text">COMBO!</span>
+    </div>
+
+    <!-- Quiz Result -->
+    <div class="quiz-result" id="quizResult">
+        <span class="result-icon">✓</span>
+        <span class="result-text">CONQUERED!</span>
+        <span class="result-xp">+25 XP</span>
+    </div>
 
     <script>
         // ============ DATA ============
@@ -900,11 +1378,875 @@
             { id: 'halfway', name: 'Halfway There', desc: 'Complete 50% of all items', icon: '⭐', xp: 300, condition: () => gameState.checkedItems.size >= 32 },
             { id: 'all_complete', name: 'Governance Master', desc: 'Complete all 64 items', icon: '👑', xp: 1000, condition: () => gameState.checkedItems.size >= 64 },
             { id: 'explorer', name: 'Explorer', desc: 'View all 8 domains', icon: '🔍', xp: 100, condition: () => true }, // Triggered manually
-            { id: 'speed_demon', name: 'Speed Demon', desc: 'Complete 10 items in one session', icon: '⚡', xp: 150, condition: () => sessionChecks >= 10 }
+            { id: 'speed_demon', name: 'Speed Demon', desc: 'Complete 10 items in one session', icon: '⚡', xp: 150, condition: () => sessionChecks >= 10 },
+            { id: 'combo_3', name: 'Hot Streak', desc: 'Get a 3x combo', icon: '🔥', xp: 75, condition: () => quizState.combo >= 3 },
+            { id: 'combo_5', name: 'On Fire', desc: 'Get a 5x combo', icon: '💥', xp: 150, condition: () => quizState.combo >= 5 },
+            { id: 'combo_10', name: 'Unstoppable', desc: 'Get a 10x combo', icon: '🌟', xp: 300, condition: () => quizState.combo >= 10 },
+            { id: 'perfect_domain', name: 'Perfect Domain', desc: 'Complete a domain with no wrong answers', icon: '💎', xp: 500, condition: () => false } // Special trigger
         ];
 
         let sessionChecks = 0;
         let viewedDomains = new Set();
+
+        // ============ QUIZ SYSTEM ============
+        let quizState = {
+            currentDomain: null,
+            currentProcess: null,
+            selectedAnswer: null,
+            combo: 0,
+            maxCombo: 0,
+            totalCorrect: 0,
+            totalAttempts: 0
+        };
+
+        // Load quiz state
+        const savedQuizState = localStorage.getItem('aiGovernanceQuizState');
+        if (savedQuizState) {
+            const parsed = JSON.parse(savedQuizState);
+            quizState.combo = parsed.combo || 0;
+            quizState.maxCombo = parsed.maxCombo || 0;
+            quizState.totalCorrect = parsed.totalCorrect || 0;
+            quizState.totalAttempts = parsed.totalAttempts || 0;
+        }
+
+        // Quiz questions for each domain/process combination
+        // Format: { question: string, options: string[], correct: number (0-3) }
+        const quizQuestions = {
+            // Domain 0: 人間監督 (Human Oversight)
+            '0-0': { // R1 方針・責任
+                question: '人間監督における「方針・責任」で最も重要なのは何ですか？',
+                options: [
+                    'AIの処理速度を最大化すること',
+                    '人間が最終決定や承認を行う範囲・権限・責任者の明確な規定',
+                    'AIの学習データを増やすこと',
+                    'システムのコストを削減すること'
+                ],
+                correct: 1
+            },
+            '0-1': { // R2 リスク評価
+                question: 'HIC/HITLとは何を指しますか？',
+                options: [
+                    'AI自動化の技術用語',
+                    'データベースの種類',
+                    '人間の介入・ループ内人間（Human-In-Command/Human-In-The-Loop）',
+                    'プログラミング言語'
+                ],
+                correct: 2
+            },
+            '0-2': { // R3 設計・検証
+                question: 'オーバーライド機能の目的は何ですか？',
+                options: [
+                    'AIの速度を上げる',
+                    'データを暗号化する',
+                    '異常時に人間がAIの判断を上書きできるようにする',
+                    'コストを削減する'
+                ],
+                correct: 2
+            },
+            '0-3': { // R4 資産・ログ
+                question: '監査証跡として保全すべき記録は？',
+                options: [
+                    'AIの処理時間のみ',
+                    '人間による承認、介入、上書き操作の記録',
+                    'サーバーの電力消費量',
+                    'ユーザーの年齢情報'
+                ],
+                correct: 1
+            },
+            '0-4': { // R5 監視・検知
+                question: 'AIの暴走の兆候を検知した際、最初にすべきことは？',
+                options: [
+                    'ログを削除する',
+                    '監督者へ即座に通知する',
+                    'AIの学習を継続する',
+                    '何もしない'
+                ],
+                correct: 1
+            },
+            '0-5': { // R6 封じ込め・復旧
+                question: 'AIを停止させた後に必要な手順は？',
+                options: [
+                    'すぐにAIを再起動する',
+                    'データを全て削除する',
+                    '手動業務への切り替えや安全な復旧手順',
+                    '新しいAIを購入する'
+                ],
+                correct: 2
+            },
+            '0-6': { // R7 対外対応
+                question: '利用者への説明で重要なポイントは？',
+                options: [
+                    'AIの技術的詳細をすべて開示する',
+                    '重要な決定に人間が関与している事実を適切に説明する',
+                    'コストの内訳を公開する',
+                    '競合他社の情報を共有する'
+                ],
+                correct: 1
+            },
+            '0-7': { // R8 改善・是正
+                question: '監督体制の改善に必要なプロセスは？',
+                options: [
+                    'ヒヤリハット事例の分析と介入基準の見直し',
+                    'AIの処理能力を増強する',
+                    'スタッフを削減する',
+                    '報告書を隠蔽する'
+                ],
+                correct: 0
+            },
+
+            // Domain 1: プライバシー (Privacy)
+            '1-0': { // R1 方針・責任
+                question: '個人情報保護方針で定めるべき原則は？',
+                options: [
+                    'データの最大化原則',
+                    'データの目的外利用禁止、最小化の原則',
+                    'データの無制限共有',
+                    'データの長期保存義務'
+                ],
+                correct: 1
+            },
+            '1-1': { // R2 リスク評価
+                question: 'PIAとは何の略称ですか？',
+                options: [
+                    'Personal Information Archive',
+                    'Privacy Impact Assessment（プライバシー影響評価）',
+                    'Private Internet Access',
+                    'Public Information Act'
+                ],
+                correct: 1
+            },
+            '1-2': { // R3 設計・検証
+                question: 'プライバシー保護技術として適切なものは？',
+                options: [
+                    'データの公開共有',
+                    '匿名化、秘密計算等の技術',
+                    'パスワードの削除',
+                    'アクセス制限の撤廃'
+                ],
+                correct: 1
+            },
+            '1-3': { // R4 資産・ログ
+                question: 'データセット管理で保全すべき記録は？',
+                options: [
+                    '利用履歴、アクセスログ、削除記録',
+                    'AIの予測精度のみ',
+                    'マーケティング資料',
+                    '競合他社の情報'
+                ],
+                correct: 0
+            },
+            '1-4': { // R5 監視・検知
+                question: '検知すべき異常な行動は？',
+                options: [
+                    '通常のデータアクセス',
+                    '目的外のデータアクセスや異常なデータ持ち出し',
+                    'ログインの成功',
+                    '定期的なバックアップ'
+                ],
+                correct: 1
+            },
+            '1-5': { // R6 封じ込め・復旧
+                question: 'データ漏えい発生時の最初の対応は？',
+                options: [
+                    '報告を遅延させる',
+                    '対象データの隔離やアクセス権限の停止',
+                    'データを追加で公開する',
+                    '何もしない'
+                ],
+                correct: 1
+            },
+            '1-6': { // R7 対外対応
+                question: 'データ主体からの請求で対応すべきものは？',
+                options: [
+                    '開示・訂正・削除請求（オプトアウト含む）',
+                    'データの追加収集要求',
+                    'マーケティングメールの送信',
+                    '競合他社への情報提供'
+                ],
+                correct: 0
+            },
+            '1-7': { // R8 改善・是正
+                question: 'ガバナンス体制の改善トリガーは？',
+                options: [
+                    '売上の増加',
+                    'インシデントや法令改正',
+                    'AIの処理速度向上',
+                    '従業員数の変化'
+                ],
+                correct: 1
+            },
+
+            // Domain 2: 透明性 (Transparency)
+            '2-0': { // R1 方針・責任
+                question: '透明性の方針で開示すべき情報は？',
+                options: [
+                    '企業の財務情報のみ',
+                    'AIの利用目的、能力の限界、前提条件',
+                    '競合他社の戦略',
+                    '従業員の個人情報'
+                ],
+                correct: 1
+            },
+            '2-1': { // R2 リスク評価
+                question: '透明性の欠如がもたらすリスクは？',
+                options: [
+                    'コストの増加',
+                    '利用者の誤解や誤用',
+                    'サーバーの故障',
+                    '従業員の離職'
+                ],
+                correct: 1
+            },
+            '2-2': { // R3 設計・検証
+                question: '透明性を確保するUI/UXの要件は？',
+                options: [
+                    'できるだけ情報を隠す',
+                    '利用者がAIと対話していることを認識できる設計',
+                    'すべての機能を自動化する',
+                    'ユーザー入力を制限する'
+                ],
+                correct: 1
+            },
+            '2-3': { // R4 資産・ログ
+                question: '透明性に関して保全すべき記録は？',
+                options: [
+                    'AIの電力消費量',
+                    '利用者への情報開示・説明の記録（バージョン管理含む）',
+                    'マーケティングキャンペーンの結果',
+                    'サーバーの稼働時間'
+                ],
+                correct: 1
+            },
+            '2-4': { // R5 監視・検知
+                question: '収集すべきフィードバックの種類は？',
+                options: [
+                    '購買履歴のみ',
+                    '「分かりにくい」「誤解した」といった苦情',
+                    'SNSのいいね数',
+                    '競合他社の評価'
+                ],
+                correct: 1
+            },
+            '2-5': { // R6 封じ込め・復旧
+                question: 'AIの表示に重大な誤りが見つかった場合の対応は？',
+                options: [
+                    '誤りを隠蔽する',
+                    '即座に修正情報や注意喚起を利用者へ通知する',
+                    '何もしない',
+                    'サービスを永久停止する'
+                ],
+                correct: 1
+            },
+            '2-6': { // R7 対外対応
+                question: 'ステークホルダーへの開示で重要なのは？',
+                options: [
+                    '技術的な詳細のみ',
+                    'AIシステムの概要やリスク情報の適切な説明',
+                    '財務情報の全公開',
+                    '従業員の評価情報'
+                ],
+                correct: 1
+            },
+            '2-7': { // R8 改善・是正
+                question: '説明内容やUIの改善に必要なのは？',
+                options: [
+                    '競合他社のコピー',
+                    '利用者の理解度調査や誤用事例に基づく継続的改善',
+                    'コスト削減のみ',
+                    '機能の削除'
+                ],
+                correct: 1
+            },
+
+            // Domain 3: 公平性 (Fairness)
+            '3-0': { // R1 方針・責任
+                question: '公平性の方針で禁止すべきことは？',
+                options: [
+                    'AIの利用自体',
+                    'AIによる差別（特定の属性への不利益な扱い）',
+                    'データの収集',
+                    'システムの更新'
+                ],
+                correct: 1
+            },
+            '3-1': { // R2 リスク評価
+                question: 'バイアスの評価対象は？',
+                options: [
+                    'サーバーの性能のみ',
+                    '学習データやアルゴリズムに含まれるバイアス',
+                    'ユーザーの年齢層',
+                    'マーケティング費用'
+                ],
+                correct: 1
+            },
+            '3-2': { // R3 設計・検証
+                question: 'リリース前に実施すべき検証は？',
+                options: [
+                    '売上予測',
+                    '公平性指標に基づいたバイアス検知テスト',
+                    'コスト分析のみ',
+                    'マーケティング戦略の確認'
+                ],
+                correct: 1
+            },
+            '3-3': { // R4 資産・ログ
+                question: '公平性検証で保全すべき記録は？',
+                options: [
+                    '検証に使用したデータセット、評価指標、テスト結果',
+                    '売上データのみ',
+                    '競合他社の情報',
+                    'マーケティング資料'
+                ],
+                correct: 0
+            },
+            '3-4': { // R5 監視・検知
+                question: '運用中に監視すべきことは？',
+                options: [
+                    'サーバーの電力消費',
+                    'AI出力に特定の層への偏りが生じていないか',
+                    'ユーザーのログイン回数',
+                    '売上の推移'
+                ],
+                correct: 1
+            },
+            '3-5': { // R6 封じ込め・復旧
+                question: '差別的な出力が検知された場合の対応は？',
+                options: [
+                    '報告を遅延させる',
+                    'モデルの利用停止やロールバック',
+                    '出力をそのまま継続',
+                    'ログを削除する'
+                ],
+                correct: 1
+            },
+            '3-6': { // R7 対外対応
+                question: '不利益を被った利用者への対応で必要なのは？',
+                options: [
+                    '申立てを無視する',
+                    '申立てを受け付け、救済するプロセス',
+                    '責任を否定する',
+                    '法的措置で対抗する'
+                ],
+                correct: 1
+            },
+            '3-7': { // R8 改善・是正
+                question: 'バイアス検知後に実施すべきことは？',
+                options: [
+                    '何も変更しない',
+                    '学習データの見直しやモデルの再学習',
+                    'サービスの永久停止',
+                    '報告書の隠蔽'
+                ],
+                correct: 1
+            },
+
+            // Domain 4: 安全性 (Safety/Security)
+            '4-0': { // R1 方針・責任
+                question: 'AIシステム固有の脅威として挙げられるのは？',
+                options: [
+                    '電力不足',
+                    '敵対的攻撃、プロンプト注入等',
+                    'ハードウェアの老朽化',
+                    'オフィスの騒音'
+                ],
+                correct: 1
+            },
+            '4-1': { // R2 リスク評価
+                question: 'セーフティリスクの評価対象は？',
+                options: [
+                    'マーケティング効果',
+                    'AIに対する攻撃や悪用が事業や利用者に与える影響度',
+                    'オフィスの立地',
+                    '従業員の満足度'
+                ],
+                correct: 1
+            },
+            '4-2': { // R3 設計・検証
+                question: 'モデルの堅牢性検証に含まれるのは？',
+                options: [
+                    'コスト分析',
+                    'ロバストネス検証やレッドチーミング',
+                    '売上予測',
+                    'マーケティング戦略'
+                ],
+                correct: 1
+            },
+            '4-3': { // R4 資産・ログ
+                question: 'AIの重要資産管理で必要なのは？',
+                options: [
+                    '資産の公開共有',
+                    '台帳管理、改ざん検知、アクセス制御のログ',
+                    'コスト削減のみ',
+                    'マーケティング資料の保存'
+                ],
+                correct: 1
+            },
+            '4-4': { // R5 監視・検知
+                question: 'リアルタイムで検知すべきものは？',
+                options: [
+                    'ユーザーの購買履歴',
+                    'AIへの異常な入力（攻撃的なプロンプト等）や不正な挙動',
+                    'サーバールームの温度',
+                    '従業員の出退勤'
+                ],
+                correct: 1
+            },
+            '4-5': { // R6 封じ込め・復旧
+                question: 'セキュリティインシデント発生時の対応で必要なのは？',
+                options: [
+                    '報告を遅延させる',
+                    'システム隔離、被害拡大防止、安全な復旧手順',
+                    'ログの削除',
+                    '何もしない'
+                ],
+                correct: 1
+            },
+            '4-6': { // R7 対外対応
+                question: '攻撃による被害発生時に必要な対応は？',
+                options: [
+                    '情報を隠蔽する',
+                    '関係当局や被害者への通知',
+                    'サービスを即座に終了する',
+                    '責任を否定する'
+                ],
+                correct: 1
+            },
+            '4-7': { // R8 改善・是正
+                question: 'セキュリティ対策の更新トリガーは？',
+                options: [
+                    '売上の変化',
+                    '新たな攻撃手法やインシデント分析',
+                    '従業員数の変化',
+                    'オフィスの移転'
+                ],
+                correct: 1
+            },
+
+            // Domain 5: 説明責任 (Accountability)
+            '5-0': { // R1 方針・責任
+                question: '説明責任における重要な定義は？',
+                options: [
+                    'AIの処理速度',
+                    '開発者、提供者、利用者の役割と責任分界点',
+                    'サーバーの設置場所',
+                    'マーケティング予算'
+                ],
+                correct: 1
+            },
+            '5-1': { // R2 リスク評価
+                question: '説明能力の評価基準は？',
+                options: [
+                    'コストの高さ',
+                    'AI判断結果に対する説明が求められるレベル（重大度）',
+                    'サーバーの処理能力',
+                    '従業員数'
+                ],
+                correct: 1
+            },
+            '5-2': { // R3 設計・検証
+                question: 'XAI（説明可能AI）の目的は？',
+                options: [
+                    'AIの速度向上',
+                    'AIの推論結果の根拠を提示する',
+                    'コスト削減',
+                    'データ量の削減'
+                ],
+                correct: 1
+            },
+            '5-3': { // R4 資産・ログ
+                question: '説明責任のために記録すべきことは？',
+                options: [
+                    '処理時間のみ',
+                    '個別の判断結果について「なぜその結論に至ったか」の証跡',
+                    'マーケティング効果',
+                    '競合他社の動向'
+                ],
+                correct: 1
+            },
+            '5-4': { // R5 監視・検知
+                question: '検知すべき状況は？',
+                options: [
+                    'サーバーの負荷',
+                    '説明が困難な挙動や責任の所在が曖昧になりうる状況',
+                    'ユーザーのログイン',
+                    '売上の変動'
+                ],
+                correct: 1
+            },
+            '5-5': { // R6 封じ込め・復旧
+                question: '責任追及が発生した際に必要なのは？',
+                options: [
+                    '責任の否定',
+                    '対応チーム組成手順',
+                    'ログの削除',
+                    '報告の遅延'
+                ],
+                correct: 1
+            },
+            '5-6': { // R7 対外対応
+                question: '監査人や当局への説明で必要なのは？',
+                options: [
+                    '曖昧な回答',
+                    '合理的な根拠に基づく回答ができる体制',
+                    '情報の隠蔽',
+                    '責任の転嫁'
+                ],
+                correct: 1
+            },
+            '5-7': { // R8 改善・是正
+                question: '説明責任を果たせなかった場合に見直すべきは？',
+                options: [
+                    'マーケティング戦略',
+                    '記録プロセスや責任分界点',
+                    'オフィスのレイアウト',
+                    '従業員の服装規定'
+                ],
+                correct: 1
+            },
+
+            // Domain 6: コンプライアンス (Compliance)
+            '6-0': { // R1 方針・責任
+                question: 'AI利活用のコンプライアンスで整備すべきものは？',
+                options: [
+                    'マーケティング計画のみ',
+                    '全社的な基本方針、適用法令、内部規程体系',
+                    'オフィスの設備',
+                    '従業員の福利厚生'
+                ],
+                correct: 1
+            },
+            '6-1': { // R2 リスク評価
+                question: '特定・評価すべき法令リスクは？',
+                options: [
+                    'オフィスの賃貸契約',
+                    '著作権法、個人情報保護法、業法等の義務違反リスク',
+                    '従業員の通勤手段',
+                    'オフィス用品の購入'
+                ],
+                correct: 1
+            },
+            '6-2': { // R3 設計・検証
+                question: '外部委託先やSaaS選定で含めるべき要件は？',
+                options: [
+                    '価格の安さのみ',
+                    'AIガバナンス要件',
+                    'ブランドの知名度',
+                    'オフィスの場所'
+                ],
+                correct: 1
+            },
+            '6-3': { // R4 資産・ログ
+                question: 'ガバナンス活動で保管すべき記録は？',
+                options: [
+                    '会議議事録、承認記録、監査報告書等',
+                    '社員旅行の写真',
+                    'オフィスの清掃記録',
+                    '休憩時間のログ'
+                ],
+                correct: 0
+            },
+            '6-4': { // R5 監視・検知
+                question: 'コンプライアンス違反の予兆を検知する仕組みは？',
+                options: [
+                    '売上監視システム',
+                    '内部通報制度やモニタリング体制',
+                    '競合監視ツール',
+                    'SNS分析'
+                ],
+                correct: 1
+            },
+            '6-5': { // R6 封じ込め・復旧
+                question: '重大なコンプライアンス違反発覚時に必要なのは？',
+                options: [
+                    '報告の遅延',
+                    '即時報告ルートと緊急対応体制',
+                    '情報の隠蔽',
+                    '責任の否定'
+                ],
+                correct: 1
+            },
+            '6-6': { // R7 対外対応
+                question: '規制当局への対応で明確化すべきことは？',
+                options: [
+                    'マーケティング戦略',
+                    '報告義務や外部監査への対応手順',
+                    '従業員の評価基準',
+                    'オフィスの設備'
+                ],
+                correct: 1
+            },
+            '6-7': { // R8 改善・是正
+                question: 'ガバナンス体制の継続的改善に必要なのは？',
+                options: [
+                    '売上目標の変更',
+                    '定期的な内部監査や外部評価の実施と指摘事項への対応',
+                    'オフィスの移転',
+                    '従業員数の増加'
+                ],
+                correct: 1
+            },
+
+            // Domain 7: メンタル持続性 (Mental Sustainability)
+            '7-0': { // R1 方針・責任
+                question: 'メンタル持続性の方針で重視すべきことは？',
+                options: [
+                    'AIの処理効率最大化',
+                    '従業員や利用者の精神的健康を損なわない人間中心の運用',
+                    'コスト削減の徹底',
+                    '24時間稼働の推進'
+                ],
+                correct: 1
+            },
+            '7-1': { // R2 リスク評価
+                question: 'AIが人間に与える心理的負荷として評価すべきは？',
+                options: [
+                    'サーバーの負荷',
+                    '常時接続、情報過多、判断プレッシャー等',
+                    'オフィスの温度',
+                    '通勤時間'
+                ],
+                correct: 1
+            },
+            '7-2': { // R3 設計・検証
+                question: 'UI/UX設計で考慮すべきことは？',
+                options: [
+                    '機能の最大化',
+                    '認知負荷の低減、過度な依存や不安を生まない設計',
+                    'コストの最小化',
+                    '処理速度の向上'
+                ],
+                correct: 1
+            },
+            '7-3': { // R4 資産・ログ
+                question: '健康指標データとして管理すべきものは？',
+                options: [
+                    'サーバーの稼働率',
+                    '担当者の労働時間、ストレスチェック結果等',
+                    'マーケティング効果',
+                    '売上データ'
+                ],
+                correct: 1
+            },
+            '7-4': { // R5 監視・検知
+                question: '検知すべき兆候は？',
+                options: [
+                    'サーバーエラー',
+                    '運用担当者の燃え尽き（バーンアウト）の兆候や過度な負担集中',
+                    'ユーザー数の減少',
+                    '売上の変動'
+                ],
+                correct: 1
+            },
+            '7-5': { // R6 封じ込め・復旧
+                question: 'メンタル不調発生時の対応は？',
+                options: [
+                    '業務を継続させる',
+                    '業務から一時的に離脱させ、サポートする体制',
+                    '配置転換のみ',
+                    '評価を下げる'
+                ],
+                correct: 1
+            },
+            '7-6': { // R7 対外対応
+                question: '利用者への配慮で特に重要な対象は？',
+                options: [
+                    '高収入層',
+                    '子供や脆弱な立場の人',
+                    'ITリテラシーが高い人',
+                    '企業ユーザーのみ'
+                ],
+                correct: 1
+            },
+            '7-7': { // R8 改善・是正
+                question: '業務フローの見直しに必要なデータは？',
+                options: [
+                    '売上データのみ',
+                    '従業員サーベイや健康データ',
+                    '競合他社の情報',
+                    'マーケティング効果'
+                ],
+                correct: 1
+            }
+        };
+
+        function openQuiz(domainIndex, processIndex) {
+            const domain = domainData[domainIndex];
+            const process = domain.processes[processIndex];
+            const questionKey = `${domainIndex}-${processIndex}`;
+            const question = quizQuestions[questionKey];
+
+            if (!question) {
+                console.error('Quiz question not found for:', questionKey);
+                return;
+            }
+
+            quizState.currentDomain = domainIndex;
+            quizState.currentProcess = processIndex;
+            quizState.selectedAnswer = null;
+
+            // Update modal content
+            const domainTag = document.getElementById('quizDomainTag');
+            domainTag.innerHTML = `<span class="icon">${domain.icon}</span><span>${domain.name}</span>`;
+            domainTag.style.borderColor = domain.color;
+            domainTag.style.color = domain.color;
+
+            document.getElementById('quizProcessCode').textContent = process.code;
+            document.getElementById('quizProcessCode').style.borderColor = domain.color;
+            document.getElementById('quizProcessCode').style.color = domain.color;
+            document.getElementById('quizProcessName').textContent = process.name;
+
+            document.getElementById('quizQuestion').textContent = question.question;
+
+            // Render options
+            const optionsContainer = document.getElementById('quizOptions');
+            const markers = ['A', 'B', 'C', 'D'];
+            optionsContainer.innerHTML = question.options.map((option, i) => `
+                <div class="quiz-option" onclick="selectQuizOption(${i})" data-index="${i}">
+                    <div class="quiz-option-marker">${markers[i]}</div>
+                    <div class="quiz-option-text">${option}</div>
+                </div>
+            `).join('');
+
+            // Update stats
+            document.getElementById('quizCombo').textContent = quizState.combo;
+            document.getElementById('quizStreak').textContent = quizState.totalCorrect;
+
+            // Reset submit button
+            document.getElementById('quizSubmitBtn').disabled = true;
+
+            // Show modal
+            document.getElementById('quizOverlay').classList.add('active');
+        }
+
+        function selectQuizOption(index) {
+            quizState.selectedAnswer = index;
+
+            // Update UI
+            document.querySelectorAll('.quiz-option').forEach((opt, i) => {
+                opt.classList.toggle('selected', i === index);
+            });
+
+            document.getElementById('quizSubmitBtn').disabled = false;
+        }
+
+        function submitQuiz() {
+            if (quizState.selectedAnswer === null) return;
+
+            const questionKey = `${quizState.currentDomain}-${quizState.currentProcess}`;
+            const question = quizQuestions[questionKey];
+            const isCorrect = quizState.selectedAnswer === question.correct;
+
+            quizState.totalAttempts++;
+
+            // Show correct/incorrect state
+            document.querySelectorAll('.quiz-option').forEach((opt, i) => {
+                if (i === question.correct) {
+                    opt.classList.add('correct');
+                } else if (i === quizState.selectedAnswer && !isCorrect) {
+                    opt.classList.add('incorrect');
+                }
+            });
+
+            // Disable further interaction
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.style.pointerEvents = 'none';
+            });
+            document.getElementById('quizSubmitBtn').disabled = true;
+
+            if (isCorrect) {
+                quizState.combo++;
+                quizState.totalCorrect++;
+                if (quizState.combo > quizState.maxCombo) {
+                    quizState.maxCombo = quizState.combo;
+                }
+
+                // Calculate XP with combo bonus
+                const baseXP = 20;
+                const comboBonus = Math.min(quizState.combo - 1, 10) * 5; // Max 50 bonus from combo
+                const totalXP = baseXP + comboBonus;
+
+                // Show combo if applicable
+                if (quizState.combo >= 2) {
+                    showCombo(quizState.combo);
+                }
+
+                // Show success result
+                setTimeout(() => {
+                    showQuizResult(true, totalXP);
+
+                    // Actually check the item
+                    const itemId = `${quizState.currentDomain}-${quizState.currentProcess}`;
+                    gameState.checkedItems.add(itemId);
+                    sessionChecks++;
+
+                    addXP(totalXP);
+                    updateStats();
+                    renderDomainList();
+                    selectDomain(quizState.currentDomain); // Refresh detail panel
+                    createCheckParticles(quizState.currentDomain);
+                    saveState();
+                    saveQuizState();
+                    checkAllAchievements();
+
+                    // Close quiz after delay
+                    setTimeout(() => {
+                        closeQuiz();
+                    }, 1000);
+                }, 500);
+            } else {
+                quizState.combo = 0;
+
+                // Show failure result
+                setTimeout(() => {
+                    showQuizResult(false, 0);
+                    saveQuizState();
+
+                    // Close quiz after delay
+                    setTimeout(() => {
+                        closeQuiz();
+                    }, 1000);
+                }, 500);
+            }
+        }
+
+        function showCombo(combo) {
+            const comboDisplay = document.getElementById('comboDisplay');
+            comboDisplay.querySelector('.combo-count').textContent = combo;
+            comboDisplay.classList.add('show');
+
+            setTimeout(() => {
+                comboDisplay.classList.remove('show');
+            }, 800);
+        }
+
+        function showQuizResult(isCorrect, xp) {
+            const result = document.getElementById('quizResult');
+            result.className = 'quiz-result ' + (isCorrect ? 'correct' : 'incorrect');
+            result.innerHTML = isCorrect
+                ? `<span class="result-icon">⭐</span><span class="result-text">CONQUERED!</span><span class="result-xp">+${xp} XP</span>`
+                : `<span class="result-icon">💥</span><span class="result-text">FAILED...</span>`;
+            result.classList.add('show');
+
+            setTimeout(() => {
+                result.classList.remove('show');
+            }, 1500);
+        }
+
+        function closeQuiz() {
+            document.getElementById('quizOverlay').classList.remove('active');
+            quizState.currentDomain = null;
+            quizState.currentProcess = null;
+            quizState.selectedAnswer = null;
+        }
+
+        function saveQuizState() {
+            localStorage.setItem('aiGovernanceQuizState', JSON.stringify({
+                combo: quizState.combo,
+                maxCombo: quizState.maxCombo,
+                totalCorrect: quizState.totalCorrect,
+                totalAttempts: quizState.totalAttempts
+            }));
+        }
 
         // ============ THREE.JS SETUP ============
         let scene, camera, renderer, nodes = [], connections = [], centralHub;
@@ -1396,28 +2738,24 @@
             const wasChecked = gameState.checkedItems.has(itemId);
 
             if (wasChecked) {
+                // Allow unchecking directly (no quiz needed)
                 gameState.checkedItems.delete(itemId);
                 addXP(-10);
+
+                // Update UI
+                const card = document.querySelector(`[data-item="${itemId}"]`);
+                if (card) {
+                    card.classList.remove('checked');
+                    card.querySelector('.process-check').textContent = '';
+                }
+
+                updateStats();
+                renderDomainList();
+                saveState();
             } else {
-                gameState.checkedItems.add(itemId);
-                addXP(15);
-                sessionChecks++;
-                createCheckParticles(domainIndex);
+                // Open quiz to check (conquer) the item
+                openQuiz(domainIndex, processIndex);
             }
-
-            // Update UI
-            const card = document.querySelector(`[data-item="${itemId}"]`);
-            if (card) {
-                card.classList.toggle('checked', !wasChecked);
-                card.querySelector('.process-check').textContent = wasChecked ? '' : '✓';
-            }
-
-            updateStats();
-            renderDomainList();
-            saveState();
-
-            // Check achievements
-            checkAllAchievements();
         }
 
         function getDomainProgress(domainIndex) {
